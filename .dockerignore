@@ -1,0 +1,26 @@
+# Ignore Python cache and venvs
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+.venv
+.mypy_cache/
+.pytest_cache/
+
+# Ignore macOS and editor files
+.DS_Store
+.idea/
+.vscode/
+
+# Ignore test output and coverage
+.coverage
+htmlcov/
+.tox/
+
+# Ignore git and other VCS
+.git
+.gitignore 
