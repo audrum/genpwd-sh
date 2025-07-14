@@ -19,6 +19,7 @@ RUN uv pip install --system .
 
 # Now copy the rest of the app (code, templates, static, images)
 COPY main.py /app/
+COPY README.md /app/
 COPY templates/ /app/templates/
 COPY images/ /app/images/
 

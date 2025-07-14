@@ -182,5 +182,75 @@ def random_letters_route(length):
         return f"{resp['password']}\n\nEntropy: {resp['entropy']}\nComplexity: {resp['complexity']}\nEstimated Time to crack: {resp['time_to_crack']}\n", 200, {'Content-Type': 'text/plain; charset=utf-8'}
     return jsonify(resp)
 
+@app.route('/help')
+def help_route():
+    # CLI help (short version)
+    cli_help = '''\
+GenPWD.sh - Password & Passphrase Generator API
+
+Usage:
+  curl http://genpwd.sh/password
+  curl http://genpwd.sh/password+number+symbol+12
+  curl http://genpwd.sh/passphrase
+  curl http://genpwd.sh/passphrase+number+symbol+6
+  curl http://genpwd.sh/random+20
+
+Endpoints:
+  /password[+number][+symbol][+N]    Random password (N letters, default 8)
+  /passphrase[+number][+symbol][+N]  EFF passphrase (N words, default 4)
+  /random[+N]                        Random password (N letters, default 12)
+
+Options:
+  +number   Add a digit
+  +symbol   Add a symbol
+  +N        Set length (letters or words)
+
+Output:
+  Returns password/passphrase, entropy, complexity, and estimated time to crack.
+  Use --header 'Accept: application/json' for JSON output.
+'''
+    # Read the README.md file for browser help
+    readme_path = Path(__file__).parent / 'README.md'
+    with open(readme_path, 'r') as f:
+        doc = f.read()
+    # Detect if CLI (curl) or browser
+    if 'text/plain' in request.headers.get('Accept', '') or request.user_agent.string.startswith('curl'):
+        return cli_help, 200, {'Content-Type': 'text/plain; charset=utf-8'}
+    # Otherwise, render as simple HTML (preserve markdown formatting)
+    html = f"""
+    <html><head><title>GenPWD.sh Help</title></head><body style='font-family:monospace;white-space:pre-wrap;background:#f8faff;padding:2em;'>
+    <h1>GenPWD.sh Help</h1>
+    <pre style='font-family:inherit;font-size:1em;background:none;border:none;'>{doc}</pre>
+    </body></html>
+    """
+    return html
+
+@app.route('/about')
+def about_route():
+    # Social info
+    bluesky = 'https://bsky.app/profile/andresbolivar.bsky.social'
+    github = 'https://github.com/audrum'
+    cli_about = f'''\
+GenPWD.sh - About
+
+Created by Andres Bolivar
+Bluesky: {bluesky}
+GitHub:  {github}
+'''
+    if 'text/plain' in request.headers.get('Accept', '') or request.user_agent.string.startswith('curl'):
+        return cli_about, 200, {'Content-Type': 'text/plain; charset=utf-8'}
+    html = f"""
+    <html><head><title>About GenPWD.sh</title></head><body style='font-family:sans-serif;background:#f8faff;padding:2em;'>
+    <h1>About GenPWD.sh</h1>
+    <p><b>Created by Andres Bolivar</b></p>
+    <ul>
+      <li>Bluesky: <a href='{bluesky}' target='_blank'>{bluesky}</a></li>
+      <li>GitHub: <a href='{github}' target='_blank'>{github}</a></li>
+    </ul>
+    <p style='margin-top:2em;'><a href='/help'>API Help</a></p>
+    </body></html>
+    """
+    return html
+
 if __name__ == '__main__':
     app.run(debug=True, port=9876, host='0.0.0.0')
