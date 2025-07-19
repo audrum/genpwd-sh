@@ -20,13 +20,13 @@ def load_eff_wordlist(file_path):
     return word_dict
 
 def generate_passphrase(word_dict, length, use_digits, use_symbols):
-    """Generate a passphrase using the EFF wordlist, with options for digits and symbols."""
+    """Generate a passphrase using the EFF wordlist, with options for digits and symbols. Each word is capitalized."""
     words = []
     for _ in range(length):
         while True:
             number = str(random.randint(11111, 66666))
             if number in word_dict:
-                words.append(word_dict[number])
+                words.append(word_dict[number].capitalize())
                 break
     password = '-'.join(words)
     if use_digits:
