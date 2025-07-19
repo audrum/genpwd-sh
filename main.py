@@ -189,11 +189,11 @@ def help_route():
 GenPWD.sh - Password & Passphrase Generator API
 
 Usage:
-  curl http://genpwd.sh/password
-  curl http://genpwd.sh/password+number+symbol+12
-  curl http://genpwd.sh/passphrase
-  curl http://genpwd.sh/passphrase+number+symbol+6
-  curl http://genpwd.sh/random+20
+  curl genpwd.sh/password
+  curl genpwd.sh/password+number+symbol+12
+  curl genpwd.sh/passphrase
+  curl genpwd.sh/passphrase+number+symbol+6
+  curl genpwd.sh/random+20
 
 Endpoints:
   /password[+number][+symbol][+N]    Random password (N letters, default 8)

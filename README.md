@@ -46,19 +46,19 @@ You can combine `+number`, `+symbol`, and `+<length>` in any order after `/passw
 
 ```sh
 # 8-letter password
-curl http://genpwd.sh/password
+curl genpwd.sh/password
 
 # 12-letter password with digit and symbol
-curl http://genpwd.sh/password+number+symbol+12
+curl genpwd.sh/password+number+symbol+12
 
 # 4-word passphrase
-curl http://genpwd.sh/passphrase
+curl genpwd.sh/passphrase
 
 # 6-word passphrase with digit and symbol
-curl http://genpwd.sh/passphrase+number+symbol+6
+curl genpwd.sh/passphrase+number+symbol+6
 
 # 20-letter random password
-curl http://genpwd.sh/random+20
+curl genpwd.sh/random+20
 ```
 
 ### Example output (plain text)
