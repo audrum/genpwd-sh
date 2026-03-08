@@ -272,6 +272,24 @@
     .toggle-switch input:checked ~ .toggle-track { background: var(--cyan); }
     .toggle-switch input:checked ~ .toggle-thumb { transform: translateX(16px); background: #fff; }
 
+    /* ── Generate button loading state ── */
+    .generate-btn.loading {
+      pointer-events: none;
+      opacity: 0.75;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .generate-btn.loading::after {
+      content: '';
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
     /* ── Generate button ── */
     .generate-btn {
       width: 100%;
@@ -403,6 +421,42 @@
       font-family: 'DM Mono', monospace;
       word-break: break-word;
       overflow-wrap: anywhere;
+    }
+
+    /* ── Entropy tooltip ── */
+    .entropy-label {
+      cursor: help;
+      border-bottom: 1px dotted rgba(0,229,255,0.4);
+    }
+
+    /* ── Password history ── */
+    .pwd-history {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 14px;
+      max-width: min(560px, calc(100vw - 32px));
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .history-chip {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      padding: 3px 10px;
+      background: rgba(0, 229, 255, 0.07);
+      border: 1px solid rgba(0, 229, 255, 0.18);
+      border-radius: 20px;
+      color: rgba(255,255,255,0.5);
+      cursor: pointer;
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .history-chip:hover {
+      border-color: #00e5ff;
+      color: #00e5ff;
     }
 
     /* ── API panel ── */
@@ -592,12 +646,14 @@
           <div class="strength-meta">
             <span class="strength-label" id="strengthLabel">&#x2014;</span>
             <span class="meta-stats">
-              <span id="entropyVal">&#x2014;</span> bits &middot; <span id="crackVal">&#x2014;</span>
+              <span id="entropyVal">&#x2014;</span> <span class="entropy-label" title="Bits of entropy: higher = harder to crack. 60+ is strong, 80+ is very strong.">bits</span> &middot; <span id="crackVal">&#x2014;</span>
             </span>
           </div>
         </div>
       </div>
     </div><!-- /.card -->
+
+    <div id="pwd-history" class="pwd-history" aria-label="Recent passwords"></div>
 
     <!-- API reference (collapsible) -->
     <div class="api-panel">
@@ -882,6 +938,7 @@ curl -sX POST genpwd.sh/generate \
     /* ── Generate via POST /generate ── */
     function generate() {
       genBtn.disabled = true;
+      genBtn.classList.add('loading');
 
       var payload = JSON.stringify({
         type:        currentType,
@@ -902,10 +959,12 @@ curl -sX POST genpwd.sh/generate \
       .then(function(data) {
         displayResult(data);
         genBtn.disabled = false;
+        genBtn.classList.remove('loading');
       })
       .catch(function(err) {
         console.error('Generate error:', err);
         genBtn.disabled = false;
+        genBtn.classList.remove('loading');
         if (result.style.display !== 'none') {
           pwDisplay.textContent = 'Error generating — try again';
         }
@@ -941,6 +1000,9 @@ curl -sX POST genpwd.sh/generate \
       /* Stats */
       entropyVal.textContent = data.entropy;
       crackVal.textContent   = data.time_to_crack;
+
+      /* Password history */
+      addToHistory(data.password);
     }
 
     /* ── Copy ── */
@@ -962,6 +1024,36 @@ curl -sX POST genpwd.sh/generate \
       var open = apiBody.style.display === 'block';
       apiBody.style.display = open ? 'none' : 'block';
       apiToggle.classList.toggle('open', !open);
+    });
+
+    /* ── Password history ── */
+    const _history = [];
+    function addToHistory(pwd) {
+      if (_history[0] === pwd) return; // don't add duplicate consecutive
+      _history.unshift(pwd);
+      if (_history.length > 5) _history.pop();
+      const el = document.getElementById('pwd-history');
+      if (!el) return;
+      while (el.firstChild) el.removeChild(el.firstChild);
+      _history.forEach(function(p) {
+        const chip = document.createElement('button');
+        chip.className = 'history-chip';
+        chip.textContent = p;
+        chip.title = 'Click to copy';
+        chip.addEventListener('click', function() {
+          navigator.clipboard.writeText(p).catch(function() {});
+        });
+        el.appendChild(chip);
+      });
+    }
+
+    /* ── Keyboard shortcut: Space/Enter triggers generate ── */
+    document.addEventListener('keydown', function(e) {
+      const tag = document.activeElement ? document.activeElement.tagName : '';
+      if ((e.key === ' ' || e.key === 'Enter') && tag !== 'INPUT' && tag !== 'BUTTON' && tag !== 'SELECT') {
+        e.preventDefault();
+        document.querySelector('.generate-btn').click();
+      }
     });
 
     /* ── Init ── */
