@@ -188,6 +188,9 @@
     .control-value {
       font-weight: 700;
       color: var(--cyan);
+      display: flex;
+      align-items: baseline;
+      gap: 2px;
     }
     .unit {
       font-size: 0.65rem;
@@ -195,6 +198,23 @@
       color: var(--text-muted);
       margin-left: 3px;
     }
+    #lengthVal {
+      font-family: 'DM Sans', sans-serif;
+      font-size: inherit;
+      font-weight: 700;
+      color: var(--cyan);
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid rgba(0,229,255,0.35);
+      outline: none;
+      width: 3ch;
+      text-align: right;
+      padding: 0;
+      -moz-appearance: textfield;
+    }
+    #lengthVal::-webkit-outer-spin-button,
+    #lengthVal::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    #lengthVal:focus { border-bottom-color: var(--cyan); }
 
     /* ── Range slider ── */
     input[type="range"] {
@@ -600,7 +620,7 @@
         <label for="lengthSlider">
           Length
           <span class="control-value">
-            <span id="lengthVal">4</span><span id="lengthUnit" class="unit"> words</span>
+            <input type="number" id="lengthVal" value="4" min="2" max="20"><span id="lengthUnit" class="unit"> words</span>
           </span>
         </label>
         <input type="range" id="lengthSlider" min="2" max="20" value="4">
@@ -899,7 +919,9 @@ curl -sX POST genpwd.sh/generate \
       slider.min   = cfg.min;
       slider.max   = cfg.max;
       slider.value = cfg.value;
-      lengthVal.textContent  = cfg.value;
+      lengthVal.min   = cfg.min;
+      lengthVal.max   = cfg.max;
+      lengthVal.value = cfg.value;
       lengthUnit.textContent = cfg.unit;
     }
 
@@ -924,8 +946,26 @@ curl -sX POST genpwd.sh/generate \
     /* ── Slider input ── */
     const debouncedGenerate = debounce(generate, 300);
     slider.addEventListener('input', function() {
-      lengthVal.textContent = slider.value;
+      lengthVal.value = slider.value;
       debouncedGenerate();
+    });
+
+    /* ── Number input sync with slider ── */
+    lengthVal.addEventListener('input', function() {
+      var v = parseInt(lengthVal.value, 10);
+      if (!isNaN(v)) {
+        var clamped = Math.max(parseInt(slider.min, 10), Math.min(parseInt(slider.max, 10), v));
+        slider.value = clamped;
+        debouncedGenerate();
+      }
+    });
+    lengthVal.addEventListener('blur', function() {
+      var v = parseInt(lengthVal.value, 10);
+      var clamped = isNaN(v)
+        ? parseInt(slider.value, 10)
+        : Math.max(parseInt(slider.min, 10), Math.min(parseInt(slider.max, 10), v));
+      lengthVal.value = clamped;
+      slider.value    = clamped;
     });
 
     /* ── Toggle input ── */
@@ -942,7 +982,7 @@ curl -sX POST genpwd.sh/generate \
 
       var payload = JSON.stringify({
         type:        currentType,
-        length:      parseInt(slider.value, 10),
+        length:      parseInt(lengthVal.value, 10),
         use_digits:  useDigits.checked,
         use_symbols: useSymbols.checked,
       });
