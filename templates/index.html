@@ -188,9 +188,6 @@
     .control-value {
       font-weight: 700;
       color: var(--cyan);
-      display: flex;
-      align-items: baseline;
-      gap: 2px;
     }
     .unit {
       font-size: 0.65rem;
@@ -198,23 +195,6 @@
       color: var(--text-muted);
       margin-left: 3px;
     }
-    #lengthVal {
-      font-family: 'DM Sans', sans-serif;
-      font-size: inherit;
-      font-weight: 700;
-      color: var(--cyan);
-      background: transparent;
-      border: none;
-      border-bottom: 1px solid rgba(0,229,255,0.35);
-      outline: none;
-      width: 3ch;
-      text-align: right;
-      padding: 0;
-      -moz-appearance: textfield;
-    }
-    #lengthVal::-webkit-outer-spin-button,
-    #lengthVal::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-    #lengthVal:focus { border-bottom-color: var(--cyan); }
 
     /* ── Range slider ── */
     input[type="range"] {
@@ -444,12 +424,51 @@
     }
 
     /* ── Entropy tooltip ── */
-    .entropy-label {
-      cursor: help;
-      border-bottom: 1px dotted rgba(0,229,255,0.4);
+    .entropy-info-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,229,255,0.40);
+      background: transparent;
+      color: rgba(0,229,255,0.70);
+      font-size: 0.60rem;
+      font-weight: 700;
+      cursor: pointer;
+      vertical-align: middle;
+      margin-left: 4px;
+      line-height: 1;
+      padding: 0;
+      transition: all 0.2s;
     }
+    .entropy-info-btn:hover { background: rgba(0,229,255,0.12); color: var(--cyan); }
+    .entropy-popover {
+      display: none;
+      margin-top: 6px;
+      padding: 8px 12px;
+      background: rgba(0,0,0,0.55);
+      border: 1px solid rgba(0,229,255,0.20);
+      border-radius: 8px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      backdrop-filter: blur(10px);
+    }
+    .entropy-popover.visible { display: block; }
 
     /* ── Password history ── */
+    .history-title {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      max-width: min(560px, calc(100vw - 32px));
+      width: 100%;
+      margin-top: 20px;
+      margin-bottom: 6px;
+    }
     .pwd-history {
       display: flex;
       flex-wrap: wrap;
@@ -620,7 +639,7 @@
         <label for="lengthSlider">
           Length
           <span class="control-value">
-            <input type="number" id="lengthVal" value="4" min="2" max="20"><span id="lengthUnit" class="unit"> words</span>
+            <span id="lengthVal">4</span><span id="lengthUnit" class="unit"> words</span>
           </span>
         </label>
         <input type="range" id="lengthSlider" min="2" max="20" value="4">
@@ -666,13 +685,19 @@
           <div class="strength-meta">
             <span class="strength-label" id="strengthLabel">&#x2014;</span>
             <span class="meta-stats">
-              <span id="entropyVal">&#x2014;</span> <span class="entropy-label" title="Bits of entropy: higher = harder to crack. 60+ is strong, 80+ is very strong.">bits</span> &middot; <span id="crackVal">&#x2014;</span>
+              <span id="entropyVal">&#x2014;</span> bits
+              <button class="entropy-info-btn" id="entropyInfoBtn" aria-label="What is entropy?">?</button>
+              &middot; <span id="crackVal">&#x2014;</span>
             </span>
+            <div class="entropy-popover" id="entropyPopover">
+              Entropy measures unpredictability in bits. Each extra bit doubles the combinations an attacker must try. 60+ bits is strong; 80+ bits is very strong.
+            </div>
           </div>
         </div>
       </div>
     </div><!-- /.card -->
 
+    <p class="history-title">History</p>
     <div id="pwd-history" class="pwd-history" aria-label="Recent passwords"></div>
 
     <!-- API reference (collapsible) -->
@@ -919,9 +944,7 @@ curl -sX POST genpwd.sh/generate \
       slider.min   = cfg.min;
       slider.max   = cfg.max;
       slider.value = cfg.value;
-      lengthVal.min   = cfg.min;
-      lengthVal.max   = cfg.max;
-      lengthVal.value = cfg.value;
+      lengthVal.textContent  = cfg.value;
       lengthUnit.textContent = cfg.unit;
     }
 
@@ -946,26 +969,8 @@ curl -sX POST genpwd.sh/generate \
     /* ── Slider input ── */
     const debouncedGenerate = debounce(generate, 300);
     slider.addEventListener('input', function() {
-      lengthVal.value = slider.value;
+      lengthVal.textContent = slider.value;
       debouncedGenerate();
-    });
-
-    /* ── Number input sync with slider ── */
-    lengthVal.addEventListener('input', function() {
-      var v = parseInt(lengthVal.value, 10);
-      if (!isNaN(v)) {
-        var clamped = Math.max(parseInt(slider.min, 10), Math.min(parseInt(slider.max, 10), v));
-        slider.value = clamped;
-        debouncedGenerate();
-      }
-    });
-    lengthVal.addEventListener('blur', function() {
-      var v = parseInt(lengthVal.value, 10);
-      var clamped = isNaN(v)
-        ? parseInt(slider.value, 10)
-        : Math.max(parseInt(slider.min, 10), Math.min(parseInt(slider.max, 10), v));
-      lengthVal.value = clamped;
-      slider.value    = clamped;
     });
 
     /* ── Toggle input ── */
@@ -982,7 +987,7 @@ curl -sX POST genpwd.sh/generate \
 
       var payload = JSON.stringify({
         type:        currentType,
-        length:      parseInt(lengthVal.value, 10),
+        length:      parseInt(slider.value, 10),
         use_digits:  useDigits.checked,
         use_symbols: useSymbols.checked,
       });
@@ -1057,6 +1062,11 @@ curl -sX POST genpwd.sh/generate \
           copyBtn.classList.remove('copied');
         }, 2000);
       }).catch(function(err) { console.error('Copy failed:', err); });
+    });
+
+    /* ── Entropy info toggle ── */
+    document.getElementById('entropyInfoBtn').addEventListener('click', function() {
+      document.getElementById('entropyPopover').classList.toggle('visible');
     });
 
     /* ── API toggle ── */
