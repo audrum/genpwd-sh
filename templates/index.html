@@ -32,12 +32,15 @@
     }
 
     /* ── Base ── */
+    html { height: 100%; }
     body {
+      height: 100%;
       background: var(--bg);
-      min-height: 100vh;
       font-family: 'Syne', sans-serif;
       color: var(--text);
-      overflow-x: hidden;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
     /* ── Floating orbs ── */
@@ -83,11 +86,12 @@
     main {
       position: relative;
       z-index: 1;
+      flex: 1;
+      overflow-y: auto;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 52px 16px 60px;
-      min-height: 100vh;
+      padding: 40px 16px 24px;
     }
 
     /* ── Header ── */
@@ -124,7 +128,7 @@
         0 25px 50px rgba(0, 0, 0, 0.6),
         inset 0 1px 0 rgba(255,255,255,0.04);
       padding: 32px;
-      max-width: 460px;
+      max-width: min(560px, calc(100vw - 32px));
       width: 100%;
       position: relative;
     }
@@ -399,7 +403,7 @@
     /* ── API panel ── */
     .api-panel {
       width: 100%;
-      max-width: 460px;
+      max-width: min(560px, calc(100vw - 32px));
       margin-top: 16px;
     }
     .api-toggle {
@@ -466,10 +470,16 @@
 
     /* ── Footer ── */
     footer {
-      margin-top: 36px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+      padding: 14px 16px;
       text-align: center;
       font-size: 0.78rem;
       color: var(--text-muted);
+      border-top: 1px solid rgba(255,255,255,0.05);
+      background: rgba(5, 13, 31, 0.6);
+      backdrop-filter: blur(20px);
     }
     footer .footer-inner {
       display: flex;
@@ -489,8 +499,8 @@
 
     /* ── Responsive ── */
     @media (max-width: 500px) {
-      main { padding: 32px 12px 48px; }
-      .card { padding: 22px 16px; }
+      main { padding: 24px 12px 16px; }
+      .card { padding: 20px 14px; }
       .password-display { font-size: 1rem; }
       .logo { font-size: 1.6rem; }
       .options { flex-direction: column; }
