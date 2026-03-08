@@ -91,3 +91,24 @@ def test_entropy_passphrase_greater_than_password(client):
     r1 = client.get('/passphrase+6', headers={'Accept': 'application/json'})
     r2 = client.get('/password+8', headers={'Accept': 'application/json'})
     assert r1.get_json()['entropy'] > r2.get_json()['entropy']
+
+
+def test_random_route_plain(client):
+    r = client.get('/random', headers={'User-Agent': 'curl/7.88.0'})
+    assert r.status_code == 200
+    assert b'Entropy:' in r.data
+
+def test_random_route_with_length(client):
+    r = client.get('/random+20', headers={'Accept': 'application/json'})
+    data = r.get_json()
+    assert len(data['password']) == 20
+
+def test_random_route_with_number(client):
+    r = client.get('/random+number', headers={'Accept': 'application/json'})
+    data = r.get_json()
+    assert any(c.isdigit() for c in data['password'])
+
+def test_random_route_with_symbol(client):
+    r = client.get('/random+symbol', headers={'Accept': 'application/json'})
+    data = r.get_json()
+    assert any(c in SYMBOLS for c in data['password'])

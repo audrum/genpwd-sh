@@ -240,11 +240,11 @@ def passphrase_route(extra):
     return plain_text_response(data) if is_cli_request() else jsonify(data)
 
 
-@app.route("/random", defaults={"length": 12})
-@app.route("/random+<int:length>")
-def random_letters_route(length):
-    password = generate_password(length)
-    entropy = calculate_entropy(password, 52)
+@app.route("/random", defaults={"extra": ""})
+@app.route("/random<path:extra>")
+def random_letters_route(extra):
+    length, use_digits, use_symbols = parse_options("/random" + extra, default_length=12)
+    password, entropy = generate_password_with_options(length, use_digits, use_symbols)
     data = build_response(password, entropy)
     return plain_text_response(data) if is_cli_request() else jsonify(data)
 
