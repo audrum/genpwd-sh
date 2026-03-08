@@ -42,9 +42,9 @@ All application logic lives in a single file: `main.py`.
 
 **Option parsing:** The `parse_options()` function parses `+number`, `+symbol`, and `+<int>` tokens from the URL path using regex. Options can appear in any order.
 
-**Response format:** All password generation flows through `password_response()`, which calculates entropy (bits), complexity label (Weak/Fair/Good/Strong), and estimated time to crack at 10B guesses/second.
+**Response format:** All password generation flows through `build_response()`, which calculates entropy (bits), complexity label (Weak/Fair/Good/Strong), and estimated time to crack at 10B guesses/second.
 
-**Wordlist:** `eff_large_wordlist.txt` is the EFF Diceware large wordlist (tab-separated number-word pairs). Loaded fresh on each passphrase request.
+**Wordlist:** `eff_large_wordlist.txt` is the EFF Diceware large wordlist (tab-separated number-word pairs). Loaded once on first passphrase request and cached for the process lifetime.
 
 **Content negotiation:** curl requests (detected by `User-Agent` starting with `curl`) and requests with `Accept: text/plain` get plain text responses; all others get JSON.
 

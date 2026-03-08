@@ -1,4 +1,4 @@
-import random
+import secrets
 import math
 from pathlib import Path
 from flask import Flask, render_template, request, jsonify
@@ -36,7 +36,7 @@ def generate_passphrase(word_dict: dict, length: int, use_digits: bool, use_symb
     words = []
     for _ in range(length):
         while True:
-            number = str(random.randint(11111, 66666))
+            number = str(secrets.randbelow(66666 - 11111 + 1) + 11111)
             if number in word_dict:
                 words.append(word_dict[number].capitalize())
                 break
@@ -45,9 +45,9 @@ def generate_passphrase(word_dict: dict, length: int, use_digits: bool, use_symb
         # No separators to sprinkle into; fall back to appending
         result = words[0]
         if use_digits:
-            result += str(random.randint(0, 9))
+            result += str(secrets.randbelow(10))
         if use_symbols:
-            result += random.choice(SYMBOLS)
+            result += secrets.choice(SYMBOLS)
         return result
 
     # Build separator slots: (length - 1) hyphens
@@ -56,26 +56,38 @@ def generate_passphrase(word_dict: dict, length: int, use_digits: bool, use_symb
     # Collect extras to sprinkle
     extras: list[str] = []
     if use_digits:
-        extras.append(str(random.randint(0, 9)))
+        extras.append(str(secrets.randbelow(10)))
     if use_symbols:
-        extras.append(random.choice(SYMBOLS))
+        extras.append(secrets.choice(SYMBOLS))
 
-    # Replace randomly chosen separators with the extras
+    # Replace randomly chosen separator slots with extras (sampling without replacement)
     if extras:
-        positions = random.sample(range(len(separators)), min(len(extras), len(separators)))
+        n_sprinkled = min(len(extras), len(separators))
+        pool = list(range(len(separators)))
+        positions = []
+        for _ in range(n_sprinkled):
+            idx = secrets.randbelow(len(pool))
+            positions.append(pool[idx])
+            pool[idx] = pool[-1]
+            pool.pop()
         for i, pos in enumerate(positions):
             separators[pos] = extras[i]
+        overflow = extras[n_sprinkled:]  # extras that couldn't fit into separator slots
+    else:
+        overflow = []
 
-    # Interleave words and separators
+    # Interleave words and separators, then append any overflow extras
     result = words[0]
     for word, sep in zip(words[1:], separators):
         result += sep + word
+    for extra in overflow:
+        result += extra
     return result
 
 
 def generate_password(length: int = 8) -> str:
     letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    return "".join(random.choice(letters) for _ in range(length))
+    return "".join(secrets.choice(letters) for _ in range(length))
 
 
 def parse_options(path: str, default_length: int) -> tuple[int, bool, bool]:
@@ -102,9 +114,9 @@ def generate_password_with_options(length: int, use_digits: bool, use_symbols: b
     """Generate a letter password with optional digit/symbol appended, and compute its entropy."""
     password = generate_password(length)
     if use_digits:
-        password += str(random.randint(0, 9))
+        password += str(secrets.randbelow(10))
     if use_symbols:
-        password += random.choice(SYMBOLS)
+        password += secrets.choice(SYMBOLS)
     charset_size = 52 + (10 if use_digits else 0) + (len(SYMBOLS) if use_symbols else 0)
     return password, calculate_entropy(password, charset_size)
 
