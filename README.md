@@ -42,6 +42,13 @@ You can generate passwords and passphrases via `curl` or your browser using the 
 
 You can combine `+number`, `+symbol`, and `+<length>` in any order after `/password` or `/passphrase`.
 
+When using `+number` or `+symbol` with a passphrase, the digit/symbol is sprinkled into a random separator position between words rather than appended at the end:
+
+```sh
+curl genpwd.sh/passphrase+number+symbol
+# Example: Apple3Bright!Castle-Dune
+```
+
 ### Example curl commands
 
 ```sh
@@ -73,9 +80,27 @@ Estimated Time to crack: 2 years, 45 days, 3 hours
 ---
 
 ## Security Notes
+- All randomness uses Python's `secrets` module (CSPRNG-backed), making generated passwords and passphrases cryptographically secure.
 - Entropy and time-to-crack are estimates, assuming 10 billion guesses/second (offline attack).
 - For maximum security, use long passphrases or passwords with digits and symbols.
 - Never reuse passwords across important accounts.
+
+---
+
+## Development
+
+### Running locally
+
+```sh
+uv sync
+uv run flask --app main run
+```
+
+### Running tests
+
+```sh
+uv run pytest
+```
 
 ---
 
