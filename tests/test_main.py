@@ -149,3 +149,9 @@ def test_password_length_clamped(client):
     import re
     letters_only = re.sub(r'[\d!@#$%^&*()_+=\[\]{}|;:,.<>?]', '', data['password'])
     assert len(letters_only) <= 64
+
+
+def test_health_route(client):
+    r = client.get('/health')
+    assert r.status_code == 200
+    assert r.get_json() == {"status": "ok"}

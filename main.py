@@ -336,5 +336,10 @@ GitHub:    {github}
     return html
 
 
+@app.route("/health")
+def health_route():
+    return jsonify({"status": "ok"})
+
+
 if __name__ == "__main__":
     app.run(debug=True, port=9876, host="0.0.0.0")
