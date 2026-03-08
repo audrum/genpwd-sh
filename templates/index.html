@@ -340,16 +340,18 @@
     .copy-btn.copied { border-color: var(--success); color: var(--success); background: rgba(16,185,129,0.08); }
 
     /* ── Password display ── */
-    .password-wrap { position: relative; margin-bottom: 16px; overflow: hidden; }
+    .password-wrap { position: relative; margin-bottom: 16px; overflow: hidden; width: 100%; }
     .password-display {
       font-family: 'DM Mono', monospace;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       font-weight: 400;
       color: #fff;
       word-break: break-all;
-      line-height: 1.6;
-      letter-spacing: 0.02em;
-      min-height: 1.6em;
+      overflow-wrap: anywhere;
+      line-height: 1.65;
+      letter-spacing: 0.01em;
+      min-height: 1.65em;
+      width: 100%;
     }
 
     /* Scan-line animation */
@@ -375,7 +377,7 @@
       background: rgba(255,255,255,0.08);
       border-radius: 2px;
       overflow: hidden;
-      margin-bottom: 8px;
+      margin-bottom: 0;
     }
     .strength-bar-fill {
       height: 100%;
@@ -385,8 +387,9 @@
     }
     .strength-meta {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 10px;
     }
     .strength-label {
       font-size: 0.75rem;
@@ -395,9 +398,11 @@
       text-transform: uppercase;
     }
     .meta-stats {
-      font-size: 0.72rem;
+      font-size: 0.71rem;
       color: var(--text-muted);
       font-family: 'DM Mono', monospace;
+      word-break: break-word;
+      overflow-wrap: anywhere;
     }
 
     /* ── API panel ── */
