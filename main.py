@@ -289,14 +289,18 @@ Output:
 
 @app.route("/about")
 def about_route():
-    bluesky = "https://bsky.app/profile/andresbolivar.bsky.social"
-    github = "https://github.com/audrum"
+    website = "https://andresbolivar.me"
+    instagram = "https://instagram.com/audrum"
+    bluesky = "https://bsky.app/profile/andresbolivar.me"
+    github = "https://github.com/audrum/genpwd-sh"
     cli_about = f"""\
 GenPWD.sh - About
 
 Created by Andres Bolivar
-Bluesky: {bluesky}
-GitHub:  {github}
+Website:   {website}
+Instagram: {instagram}
+Bluesky:   {bluesky}
+GitHub:    {github}
 """
     if is_cli_request():
         return cli_about, 200, {"Content-Type": "text/plain; charset=utf-8"}
@@ -305,6 +309,8 @@ GitHub:  {github}
 <h1>About GenPWD.sh</h1>
 <p><b>Created by Andres Bolivar</b></p>
 <ul>
+  <li>Website: <a href='{website}' target='_blank'>{website}</a></li>
+  <li>Instagram: <a href='{instagram}' target='_blank'>{instagram}</a></li>
   <li>Bluesky: <a href='{bluesky}' target='_blank'>{bluesky}</a></li>
   <li>GitHub: <a href='{github}' target='_blank'>{github}</a></li>
 </ul>
