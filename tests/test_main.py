@@ -1,6 +1,6 @@
 import pytest
 
-from main import app, generate_passphrase, load_eff_wordlist, WORDLIST, SYMBOLS
+from main import app, generate_passphrase, load_eff_wordlist, WORDLIST, SYMBOLS, limiter
 
 
 @pytest.fixture
@@ -18,6 +18,13 @@ def client(app_instance):
 @pytest.fixture
 def word_dict():
     return load_eff_wordlist(WORDLIST)
+
+
+@pytest.fixture(autouse=True)
+def disable_rate_limit():
+    limiter.enabled = False
+    yield
+    limiter.enabled = True
 
 
 # --- passphrase sprinkle tests ---

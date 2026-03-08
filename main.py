@@ -6,6 +6,18 @@ import re
 
 app = Flask(__name__)
 
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=[],
+    storage_uri="memory://",
+)
+
+RATE_LIMIT = "60 per minute"
+
 WORDLIST = Path(__file__).parent / "eff_large_wordlist.txt"
 SYMBOLS = "!@#$%^&*()_+=[]{}|;:,.<>?"
 
@@ -201,6 +213,7 @@ def index():
 
 
 @app.route("/generate", methods=["POST"])
+@limiter.limit(RATE_LIMIT)
 def generate():
     data = request.get_json(force=True, silent=True)
     if not data:
@@ -223,6 +236,7 @@ def generate():
 
 @app.route("/password", defaults={"extra": ""})
 @app.route("/password<path:extra>")
+@limiter.limit(RATE_LIMIT)
 def password_route(extra):
     length, use_digits, use_symbols = parse_options("/password" + extra, default_length=8, max_length=64)
     password, entropy = generate_password_with_options(length, use_digits, use_symbols)
@@ -232,6 +246,7 @@ def password_route(extra):
 
 @app.route("/passphrase", defaults={"extra": ""})
 @app.route("/passphrase<path:extra>")
+@limiter.limit(RATE_LIMIT)
 def passphrase_route(extra):
     length, use_digits, use_symbols = parse_options("/passphrase" + extra, default_length=4, max_length=20)
     word_dict = get_word_dict()
@@ -243,6 +258,7 @@ def passphrase_route(extra):
 
 @app.route("/random", defaults={"extra": ""})
 @app.route("/random<path:extra>")
+@limiter.limit(RATE_LIMIT)
 def random_letters_route(extra):
     length, use_digits, use_symbols = parse_options("/random" + extra, default_length=12, max_length=64)
     password, entropy = generate_password_with_options(length, use_digits, use_symbols)
