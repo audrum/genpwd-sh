@@ -202,7 +202,6 @@
       width: 100%;
       height: 3px;
       border-radius: 2px;
-      background: rgba(255,255,255,0.10);
       outline: none;
       cursor: pointer;
     }
@@ -468,6 +467,7 @@
       width: 100%;
       margin-top: 20px;
       margin-bottom: 6px;
+      display: none;
     }
     .pwd-history {
       display: flex;
@@ -624,6 +624,7 @@
       </div>
       <p class="tagline">Cryptographically secure &middot; instant &middot; free</p>
     </header>
+    <div id="srAnnounce" aria-live="polite" aria-atomic="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;"></div>
 
     <div class="card">
 
@@ -672,7 +673,10 @@
       <div class="result" id="result" style="display:none">
         <div class="result-header">
           <span class="result-type" id="resultType">Passphrase</span>
-          <button class="copy-btn" id="copyBtn">&#x2398; Copy</button>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="copy-btn" id="shareBtn">&#x1F517; Share</button>
+            <button class="copy-btn" id="copyBtn">&#x2398; Copy</button>
+          </div>
         </div>
         <div class="password-wrap">
           <div class="password-display" id="pwDisplay">&#x2014;</div>
@@ -938,6 +942,16 @@ curl -sX POST genpwd.sh/generate \
       tabSlider.style.transform = 'translateX(' + (idx * w) + 'px)';
     }
 
+    /* ── Slider fill ── */
+    function updateSliderFill() {
+      var min = parseFloat(slider.min);
+      var max = parseFloat(slider.max);
+      var val = parseFloat(slider.value);
+      var pct = ((val - min) / (max - min)) * 100;
+      slider.style.background =
+        'linear-gradient(to right, #00e5ff 0%, #00e5ff ' + pct + '%, rgba(255,255,255,0.10) ' + pct + '%, rgba(255,255,255,0.10) 100%)';
+    }
+
     /* ── Apply slider config per type ── */
     function applySliderConfig(type) {
       const cfg = SLIDER_CONFIG[type];
@@ -946,6 +960,7 @@ curl -sX POST genpwd.sh/generate \
       slider.value = cfg.value;
       lengthVal.textContent  = cfg.value;
       lengthUnit.textContent = cfg.unit;
+      updateSliderFill();
     }
 
     /* ── Tab switch ── */
@@ -970,6 +985,7 @@ curl -sX POST genpwd.sh/generate \
     const debouncedGenerate = debounce(generate, 300);
     slider.addEventListener('input', function() {
       lengthVal.textContent = slider.value;
+      updateSliderFill();
       debouncedGenerate();
     });
 
@@ -1025,6 +1041,10 @@ curl -sX POST genpwd.sh/generate \
       resultType.textContent =
         currentType.charAt(0).toUpperCase() + currentType.slice(1);
 
+      /* Screen reader announcement */
+      var sr = document.getElementById('srAnnounce');
+      if (sr) sr.textContent = currentType + ' generated: ' + data.password + '. Complexity: ' + data.complexity + '.';
+
       /* Scan-line animation */
       scanLine.classList.remove('scanning');
       /* Force reflow so the animation restarts */
@@ -1069,6 +1089,40 @@ curl -sX POST genpwd.sh/generate \
       document.getElementById('entropyPopover').classList.toggle('visible');
     });
 
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        document.getElementById('entropyPopover').classList.remove('visible');
+      }
+    });
+    document.addEventListener('click', function(e) {
+      var btn = document.getElementById('entropyInfoBtn');
+      var pop = document.getElementById('entropyPopover');
+      if (!btn.contains(e.target) && !pop.contains(e.target)) {
+        pop.classList.remove('visible');
+      }
+    });
+
+    /* ── Share button ── */
+    const shareBtn = document.getElementById('shareBtn');
+    const SHARE_ICON = '\uD83D\uDD17 Share';
+    const SHARED_OK  = '\u2713 Copied';
+
+    shareBtn.addEventListener('click', function() {
+      var type   = currentType;
+      var length = parseInt(slider.value, 10);
+      var url    = window.location.host + '/' + type + '+' + length;
+      if (useDigits.checked)  url += '+number';
+      if (useSymbols.checked) url += '+symbol';
+      navigator.clipboard.writeText(url).then(function() {
+        shareBtn.textContent = SHARED_OK;
+        shareBtn.classList.add('copied');
+        setTimeout(function() {
+          shareBtn.textContent = SHARE_ICON;
+          shareBtn.classList.remove('copied');
+        }, 2000);
+      }).catch(function() {});
+    });
+
     /* ── API toggle ── */
     apiToggle.addEventListener('click', function() {
       var open = apiBody.style.display === 'block';
@@ -1091,10 +1145,22 @@ curl -sX POST genpwd.sh/generate \
         chip.textContent = p;
         chip.title = 'Click to copy';
         chip.addEventListener('click', function() {
-          navigator.clipboard.writeText(p).catch(function() {});
+          navigator.clipboard.writeText(p).then(function() {
+            var orig = chip.textContent;
+            chip.textContent = '✓ Copied';
+            chip.style.color = '#10b981';
+            chip.style.borderColor = '#10b981';
+            setTimeout(function() {
+              chip.textContent = orig;
+              chip.style.color = '';
+              chip.style.borderColor = '';
+            }, 1500);
+          }).catch(function() {});
         });
         el.appendChild(chip);
       });
+      const titleEl = document.querySelector('.history-title');
+      if (titleEl) titleEl.style.display = _history.length > 0 ? '' : 'none';
     }
 
     /* ── Keyboard shortcut: Space/Enter triggers generate ── */
