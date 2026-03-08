@@ -1,457 +1,799 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GenPWD.sh</title>
-    <link rel="icon" type="image/x-icon" href="/images/favicon.png">
-    <!-- Font Awesome for social icons -->
-    <script src="https://kit.fontawesome.com/4b7d445623.js" crossorigin="anonymous"></script>
-    <style>
-        body {
-            min-height: 100vh;
-            margin: 0;
-            padding: 0;
-            font-family: 'SF Pro Display', 'Segoe UI', 'Roboto', Arial, sans-serif;
-            background: linear-gradient(135deg, #b0d0ff 0%, #e0e7ef 100%);
-            display: flex;
-            flex-direction: column;
-        }
-        .header-bar {
-            width: 100vw;
-            background: rgba(255,255,255,0.15);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            box-shadow: 0 4px 20px 0 rgba(31, 38, 135, 0.12);
-            border-bottom: 1px solid rgba(255,255,255,0.25);
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 10;
-            padding: 0.7em 0 0.7em 0;
-        }
-        .header-bar h1 {
-            margin: 0;
-            text-align: center;
-            color: #1a3a5d;
-            font-size: 2em;
-            font-weight: 700;
-            letter-spacing: -1px;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
-        .main-content {
-            width: 100vw;
-            flex: 1 0 auto;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding-top: 80px;
-        }
-        .glass {
-            background: rgba(255, 255, 255, 0.18);
-            border-radius: 28px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-            backdrop-filter: blur(24px) saturate(180%);
-            -webkit-backdrop-filter: blur(24px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-        .generator-section {
-            max-width: 420px;
-            width: 100%;
-            margin: 0 auto 32px auto;
-            padding: 38px 32px 28px 32px;
-            position: relative;
-        }
-        .form-group {
-            margin-bottom: 22px;
-        }
-        label {
-            font-weight: 600;
-            color: #1a3a5d;
-            margin-bottom: 8px;
-            display: inline-block;
-            text-shadow: 0 1px 1px rgba(255,255,255,0.5);
-        }
-        input[type="number"] {
-            padding: 12px 16px;
-            border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.3);
-            background: rgba(255,255,255,0.25);
-            font-size: 1em;
-            outline: none;
-            transition: all 0.3s ease;
-            margin-right: 10px;
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        input[type="number"]:focus {
-            border-color: rgba(78,161,255,0.6);
-            background: rgba(255,255,255,0.35);
-            box-shadow: 0 4px 16px rgba(78,161,255,0.2);
-        }
-        .checkbox-group {
-            display: flex;
-            gap: 20px;
-            margin-top: 10px;
-        }
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: #4ea1ff;
-        }
-        input[type="radio"] {
-            accent-color: #4ea1ff;
-        }
-        button {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, rgba(78,161,255,0.9) 0%, rgba(110,208,255,0.9) 100%);
-            color: white;
-            border: none;
-            border-radius: 16px;
-            font-size: 1.1em;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 16px rgba(78,161,255,0.3);
-            transition: all 0.3s ease;
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-        }
-        button:hover {
-            background: linear-gradient(135deg, rgba(110,208,255,0.9) 0%, rgba(78,161,255,0.9) 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(78,161,255,0.4);
-        }
-        .result {
-            margin-top: 30px;
-            padding: 28px 20px 20px 20px;
-            border-radius: 20px;
-            background: rgba(255,255,255,0.25);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.12);
-            border: 1px solid rgba(255,255,255,0.3);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            text-align: center;
-        }
-        .password {
-            font-family: 'SF Mono', 'Menlo', 'Consolas', 'Liberation Mono', monospace;
-            font-size: 1.5em;
-            font-weight: 700;
-            color: #1a3a5d;
-            background: rgba(255,255,255,0.4);
-            border-radius: 16px;
-            padding: 16px 20px;
-            margin: 12px 0 0 0;
-            letter-spacing: 1px;
-            word-break: break-all;
-            box-shadow: 0 4px 16px rgba(78,161,255,0.15);
-            border: 1px solid rgba(255,255,255,0.4);
-            display: inline-block;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-        }
-        .copy-btn {
-            background: linear-gradient(135deg, rgba(78,161,255,0.9) 0%, rgba(110,208,255,0.9) 100%);
-            color: white;
-            border: none;
-            padding: 10px 18px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-size: 14px;
-            margin-top: 16px;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            box-shadow: 0 2px 8px rgba(78,161,255,0.2);
-        }
-        .copy-btn:hover {
-            background: linear-gradient(135deg, rgba(26,58,93,0.9) 0%, rgba(78,161,255,0.9) 100%);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(78,161,255,0.3);
-        }
-        #details {
-            margin: 0 auto 0 auto;
-            margin-bottom: 32px;
-            max-width: 420px;
-            padding: 20px 20px 12px 20px;
-            border-radius: 20px;
-            background: rgba(255,255,255,0.2);
-            box-shadow: 0 4px 20px 0 rgba(31, 38, 135, 0.08);
-            border: 1px solid rgba(255,255,255,0.25);
-            backdrop-filter: blur(16px) saturate(180%);
-            -webkit-backdrop-filter: blur(16px) saturate(180%);
-            color: #1a3a5d;
-            font-size: 1em;
-        }
-        #details b {
-            color: #4ea1ff;
-            text-shadow: 0 1px 1px rgba(255,255,255,0.3);
-        }
-        .length-display {
-            text-align: left;
-            font-weight: 600;
-            color: #1a3a5d;
-            margin-bottom: 0;
-            text-shadow: 0 1px 1px rgba(255,255,255,0.5);
-        }
-        .collapsible {
-            background: rgba(255,255,255,0.2);
-            color: #1a3a5d;
-            cursor: pointer;
-            padding: 18px 24px;
-            width: 100%;
-            border: none;
-            text-align: left;
-            outline: none;
-            font-size: 1.1em;
-            border-radius: 18px;
-            margin: 0 auto 0 auto;
-            max-width: 420px;
-            margin-bottom: 8px;
-            box-shadow: 0 4px 16px rgba(78,161,255,0.1);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.2);
-            transition: all 0.3s ease;
-        }
-        .collapsible.active, .collapsible:hover {
-            background: rgba(78,161,255,0.15);
-            box-shadow: 0 6px 20px rgba(78,161,255,0.2);
-        }
-        .content {
-            padding: 18px 24px 18px 24px;
-            display: none;
-            overflow: hidden;
-            background: rgba(255,255,255,0.15);
-            border-radius: 0 0 18px 18px;
-            max-width: 420px;
-            margin: 32px auto 32px auto;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.2);
-            box-shadow: 0 4px 16px rgba(31, 38, 135, 0.08);
-        }
-        footer {
-            flex-shrink: 0;
-            width: 100vw;
-            text-align: center;
-            margin-top: 40px;
-            margin-bottom: 0;
-            padding: 20px 0 16px 0;
-            opacity: 0.9;
-            background: rgba(255,255,255,0.15);
-            border-top: 1px solid rgba(255,255,255,0.25);
-            font-size: 1.1em;
-            letter-spacing: 0.01em;
-            backdrop-filter: blur(16px) saturate(180%);
-            -webkit-backdrop-filter: blur(16px) saturate(180%);
-            box-shadow: 0 -2px 12px rgba(31, 38, 135, 0.08);
-        }
-        @media (max-width: 600px) {
-            .main-content {
-                padding-top: 60px;
-            }
-            .generator-section, #details, .collapsible, .content {
-                max-width: 98vw;
-                padding-left: 2vw;
-                padding-right: 2vw;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GenPWD.sh — Cipher Terminal</title>
+  <link rel="icon" type="image/png" href="/images/favicon.png">
+  <!-- Font Awesome for social icons -->
+  <script src="https://kit.fontawesome.com/4b7d445623.js" crossorigin="anonymous"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Variables ── */
+    :root {
+      --bg: #050d1f;
+      --card-bg: rgba(8, 18, 42, 0.70);
+      --border: rgba(0, 229, 255, 0.15);
+      --border-top: rgba(0, 229, 255, 0.50);
+      --cyan: #00e5ff;
+      --violet: #7c3aed;
+      --violet-light: #a78bfa;
+      --text: #e2e8f0;
+      --text-muted: rgba(226, 232, 240, 0.45);
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+    }
+
+    /* ── Base ── */
+    body {
+      background: var(--bg);
+      min-height: 100vh;
+      font-family: 'Syne', sans-serif;
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* ── Floating orbs ── */
+    .bg-orbs {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.25;
+      animation: drift 20s ease-in-out infinite;
+    }
+    .orb-1 {
+      width: 500px; height: 500px;
+      background: var(--violet);
+      top: -100px; left: -100px;
+      animation-delay: 0s;
+    }
+    .orb-2 {
+      width: 400px; height: 400px;
+      background: var(--cyan);
+      bottom: -100px; right: -50px;
+      animation-delay: -7s;
+    }
+    .orb-3 {
+      width: 300px; height: 300px;
+      background: #1e40af;
+      top: 40%; left: 50%;
+      animation-delay: -14s;
+    }
+    @keyframes drift {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33%       { transform: translate(30px, -30px) scale(1.05); }
+      66%       { transform: translate(-20px, 20px) scale(0.95); }
+    }
+
+    /* ── Layout ── */
+    main {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 52px 16px 60px;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .logo {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .logo-genpwd { color: #fff; }
+    .logo-sh     { color: var(--cyan); }
+    .tagline {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-top: 8px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-top: 2px solid var(--border-top);
+      border-radius: 20px;
+      backdrop-filter: blur(40px) saturate(150%);
+      -webkit-backdrop-filter: blur(40px) saturate(150%);
+      box-shadow:
+        0 0 0 1px rgba(0,229,255,0.05),
+        0 25px 50px rgba(0, 0, 0, 0.6),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+      padding: 32px;
+      max-width: 460px;
+      width: 100%;
+      position: relative;
+    }
+
+    /* ── Tabs ── */
+    .tabs {
+      position: relative;
+      display: flex;
+      background: rgba(0,0,0,0.30);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 28px;
+      gap: 0;
+    }
+    .tab-slider {
+      position: absolute;
+      height: calc(100% - 8px);
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--violet), var(--cyan));
+      top: 4px;
+      left: 4px;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 16px rgba(0, 229, 255, 0.3);
+      pointer-events: none;
+    }
+    .tab {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 9px;
+      transition: color 0.2s;
+      position: relative;
+      z-index: 1;
+      letter-spacing: 0.03em;
+    }
+    .tab.active { color: #fff; }
+
+    /* ── Control (slider row) ── */
+    .control { margin-bottom: 20px; }
+    .control > label {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+    .control-value {
+      font-weight: 700;
+      color: var(--cyan);
+    }
+    .unit {
+      font-size: 0.65rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-left: 3px;
+    }
+
+    /* ── Range slider ── */
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 3px;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.10);
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 12px rgba(0,229,255,0.6), 0 0 0 3px rgba(0,229,255,0.15);
+      cursor: pointer;
+      transition: box-shadow 0.2s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      box-shadow: 0 0 20px rgba(0,229,255,0.8), 0 0 0 5px rgba(0,229,255,0.20);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      border: none;
+      background: var(--cyan);
+      box-shadow: 0 0 12px rgba(0,229,255,0.6);
+      cursor: pointer;
+    }
+
+    /* ── Toggles ── */
+    .options { display: flex; gap: 10px; margin-bottom: 0; }
+    .toggle-item {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      background: rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      user-select: none;
+    }
+    .toggle-item:has(input:checked) { border-color: rgba(0, 229, 255, 0.30); }
+    .toggle-label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .toggle-item:has(input:checked) .toggle-label { color: var(--cyan); }
+    .toggle-switch { position: relative; width: 34px; height: 18px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      border-radius: 9px;
+      background: rgba(255,255,255,0.12);
+      transition: background 0.25s;
+    }
+    .toggle-thumb {
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.50);
+      transition: transform 0.25s, background 0.25s;
+      pointer-events: none;
+    }
+    .toggle-switch input:checked ~ .toggle-track { background: var(--cyan); }
+    .toggle-switch input:checked ~ .toggle-thumb { transform: translateX(16px); background: #fff; }
+
+    /* ── Generate button ── */
+    .generate-btn {
+      width: 100%;
+      margin-top: 24px;
+      padding: 15px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--violet), #1d4ed8);
+      color: #fff;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(124, 58, 237, 0.40);
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .generate-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.08));
+      pointer-events: none;
+    }
+    .generate-btn:hover  { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(124, 58, 237, 0.50); }
+    .generate-btn:active { transform: translateY(0); }
+
+    /* ── Result panel ── */
+    .result {
+      margin-top: 24px;
+      background: rgba(0,0,0,0.30);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 18px;
+    }
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .result-type {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.10em;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+    .copy-btn {
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: transparent;
+      color: var(--text-muted);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.03em;
+    }
+    .copy-btn:hover  { border-color: var(--cyan); color: var(--cyan); }
+    .copy-btn.copied { border-color: var(--success); color: var(--success); background: rgba(16,185,129,0.08); }
+
+    /* ── Password display ── */
+    .password-wrap { position: relative; margin-bottom: 16px; overflow: hidden; }
+    .password-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.2rem;
+      font-weight: 400;
+      color: #fff;
+      word-break: break-all;
+      line-height: 1.6;
+      letter-spacing: 0.02em;
+      min-height: 1.6em;
+    }
+
+    /* Scan-line animation */
+    .scan-line {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .scan-line.scanning {
+      animation: scan 0.45s ease-out forwards;
+    }
+    @keyframes scan {
+      0%   { top: 0%;   opacity: 0.9; }
+      100% { top: 100%; opacity: 0;   }
+    }
+
+    /* ── Strength bar ── */
+    .strength-bar-track {
+      height: 3px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .strength-bar-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 2px;
+      transition: width 0.5s cubic-bezier(0.4,0,0.2,1), background 0.5s;
+    }
+    .strength-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .strength-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .meta-stats {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ── API panel ── */
+    .api-panel {
+      width: 100%;
+      max-width: 460px;
+      margin-top: 16px;
+    }
+    .api-toggle {
+      width: 100%;
+      padding: 13px 18px;
+      text-align: left;
+      background: rgba(8,18,42,0.60);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      color: var(--text-muted);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s;
+      backdrop-filter: blur(20px);
+    }
+    .api-toggle:hover { color: var(--text); border-color: rgba(255,255,255,0.15); }
+    .api-toggle .chevron { transition: transform 0.25s; display: inline-block; }
+    .api-toggle.open .chevron { transform: rotate(180deg); }
+    .api-body {
+      margin-top: 8px;
+      padding: 18px 20px;
+      background: rgba(0,0,0,0.40);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      backdrop-filter: blur(20px);
+      font-size: 0.82rem;
+      line-height: 1.8;
+      color: var(--text-muted);
+    }
+    .api-body code {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--cyan);
+      font-size: 0.80rem;
+    }
+    .api-body pre {
+      background: rgba(0,0,0,0.50);
+      border-radius: 8px;
+      padding: 12px 14px;
+      overflow-x: auto;
+      color: #86efac;
+      font-size: 0.78rem;
+      margin-top: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .api-body ul  { padding-left: 16px; }
+    .api-body li  { margin-bottom: 3px; }
+    .api-section-title {
+      font-size: 0.70rem;
+      font-weight: 700;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: var(--violet-light);
+      margin: 14px 0 6px;
+    }
+    .api-section-title:first-child { margin-top: 0; }
+
+    /* ── Footer ── */
+    footer {
+      margin-top: 36px;
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+    footer .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    footer a {
+      color: var(--text-muted);
+      margin: 0 6px;
+      font-size: 1.1rem;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    footer a:hover { color: var(--cyan); }
+
+    /* ── Responsive ── */
+    @media (max-width: 500px) {
+      main { padding: 32px 12px 48px; }
+      .card { padding: 22px 16px; }
+      .password-display { font-size: 1rem; }
+      .logo { font-size: 1.6rem; }
+      .options { flex-direction: column; }
+    }
+  </style>
 </head>
 <body>
-    <div class="header-bar">
-        <h1>🔐 GenPWD.sh</h1>
-    </div>
-    <div class="main-content">
-        <div class="glass generator-section">
-            <form id="passwordForm">
-                <div class="form-group">
-                    <label for="type_password" style="display: inline-block;">Type:</label>
-                    <div class="checkbox-group">
-                        <div class="checkbox-item">
-                            <input type="radio" id="type_passphrase" name="type" value="passphrase" checked>
-                            <label for="type_passphrase">Passphrase (EFF wordlist)</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="radio" id="type_password" name="type" value="password">
-                            <label for="type_password">Password (random letters)</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="length" style="display: inline-block;">Length:</label>
-                    <input type="number" id="length" name="length" min="1" max="20" value="8" style="width: 80px; display: inline-block; margin-right: 10px;">
-                    <span class="length-display" id="lengthDisplay" style="display: inline-block; vertical-align: middle;"></span>
-                </div>
-                <div class="form-group" id="optionsGroup">
-                    <label>Options:</label>
-                    <div class="checkbox-group">
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="use_digits" name="use_digits">
-                            <label for="use_digits">Include Digit</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="use_symbols" name="use_symbols">
-                            <label for="use_symbols">Include Symbol</label>
-                        </div>
-                    </div>
-                </div>
-                <button type="submit">Generate</button>
-            </form>
-            <div class="result" id="result" style="display: none;">
-                <h3>Generated <span id="resultType">Password</span>:</h3>
-                <div class="password" id="password"></div>
-                <button class="copy-btn" onclick="copyPassword()">Copy to Clipboard</button>
-            </div>
+
+  <!-- Floating background orbs -->
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <main>
+    <header>
+      <div class="logo">
+        <span class="logo-genpwd">genpwd</span><span class="logo-sh">.sh</span>
+      </div>
+      <p class="tagline">Cryptographically secure &middot; instant &middot; free</p>
+    </header>
+
+    <div class="card">
+
+      <!-- Tab switcher -->
+      <div class="tabs" id="tabs">
+        <button class="tab active" data-type="passphrase">Passphrase</button>
+        <button class="tab"        data-type="password">Password</button>
+        <div class="tab-slider" id="tabSlider"></div>
+      </div>
+
+      <!-- Length control -->
+      <div class="control">
+        <label for="lengthSlider">
+          Length
+          <span class="control-value">
+            <span id="lengthVal">4</span><span id="lengthUnit" class="unit"> words</span>
+          </span>
+        </label>
+        <input type="range" id="lengthSlider" min="2" max="20" value="4">
+      </div>
+
+      <!-- Toggles -->
+      <div class="options">
+        <label class="toggle-item">
+          <span class="toggle-label">Digit</span>
+          <span class="toggle-switch">
+            <input type="checkbox" id="useDigits">
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </span>
+        </label>
+        <label class="toggle-item">
+          <span class="toggle-label">Symbol</span>
+          <span class="toggle-switch">
+            <input type="checkbox" id="useSymbols">
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </span>
+        </label>
+      </div>
+
+      <!-- Generate button -->
+      <button class="generate-btn" id="genBtn">&#x21BB; Generate</button>
+
+      <!-- Result -->
+      <div class="result" id="result" style="display:none">
+        <div class="result-header">
+          <span class="result-type" id="resultType">Passphrase</span>
+          <button class="copy-btn" id="copyBtn">&#x2398; Copy</button>
         </div>
-        <div id="details" style="display: none;">
-            <div><b>Complexity:</b> <span id="complexity"></span></div>
-            <div><b>Entropy:</b> <span id="entropy"></span> bits</div>
-            <div><b>Estimated Time to crack:</b> <span id="cracktime"></span></div>
+        <div class="password-wrap">
+          <div class="password-display" id="pwDisplay">&#x2014;</div>
+          <div class="scan-line" id="scanLine"></div>
         </div>
-        <button type="button" class="collapsible">API Usage & Examples</button>
-        <div class="content">
-            <h2 style="margin-top: 0;">API Usage</h2>
-            <p>You can generate passwords and passphrases via <b>curl</b> or your browser using the following endpoints:</p>
-            <ul>
-                <li><b>/password</b> &mdash; Random password (8 mixed-case letters, default)</li>
-                <li><b>/password+N</b> &mdash; Random password with <b>N</b> letters (e.g. <code>/password+12</code>)</li>
-                <li><b>/password+number+symbol+N</b> &mdash; Password with digit, symbol, and <b>N</b> letters (any order, e.g. <code>/password+symbol+number+10</code>)</li>
-                <li><b>/passphrase</b> &mdash; Passphrase (4 EFF words, default)</li>
-                <li><b>/passphrase+N</b> &mdash; Passphrase with <b>N</b> words (e.g. <code>/passphrase+6</code>)</li>
-                <li><b>/passphrase+number</b> &mdash; Passphrase with a digit appended</li>
-                <li><b>/passphrase+symbol</b> &mdash; Passphrase with a symbol appended</li>
-                <li><b>/passphrase+number+symbol+N</b> &mdash; Passphrase with digit, symbol, and <b>N</b> words (any order, e.g. <code>/passphrase+symbol+number+7</code>)</li>
-                <li><b>/random</b> &mdash; Random password (12 mixed-case letters, default)</li>
-                <li><b>/random+N</b> &mdash; Random password with <b>N</b> letters (e.g. <code>/random+20</code>)</li>
-            </ul>
-            <h3>Examples</h3>
-            <pre>
-# 8-letter password
+        <div class="strength-section">
+          <div class="strength-bar-track">
+            <div class="strength-bar-fill" id="strengthFill"></div>
+          </div>
+          <div class="strength-meta">
+            <span class="strength-label" id="strengthLabel">&#x2014;</span>
+            <span class="meta-stats">
+              <span id="entropyVal">&#x2014;</span> bits &middot; <span id="crackVal">&#x2014;</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div><!-- /.card -->
+
+    <!-- API reference (collapsible) -->
+    <div class="api-panel">
+      <button class="api-toggle" id="apiToggle">
+        API Reference
+        <span class="chevron">&#9662;</span>
+      </button>
+      <div class="api-body" id="apiBody" style="display:none">
+        <p class="api-section-title">Endpoints</p>
+        <ul>
+          <li><code>/password</code> &mdash; 8-letter random password</li>
+          <li><code>/password+N</code> &mdash; N-letter password (e.g. <code>/password+12</code>)</li>
+          <li><code>/password+number+symbol+N</code> &mdash; with digit &amp; symbol</li>
+          <li><code>/passphrase</code> &mdash; 4-word EFF passphrase</li>
+          <li><code>/passphrase+N</code> &mdash; N-word passphrase</li>
+          <li><code>/passphrase+number+symbol+N</code> &mdash; with extras</li>
+          <li><code>/random+N</code> &mdash; N-letter random password (default 12)</li>
+        </ul>
+        <p class="api-section-title">POST /generate</p>
+        <p>JSON body: <code>{ "type", "length", "use_digits", "use_symbols" }</code></p>
+        <p class="api-section-title">curl examples</p>
+        <pre># 8-letter password
 curl genpwd.sh/password
 
-# 12-letter password
-curl genpwd.sh/password+12
+# 12-letter password with digit &amp; symbol
+curl genpwd.sh/password+number+symbol+12
 
 # 4-word passphrase
 curl genpwd.sh/passphrase
 
-# 6-word passphrase with digit and symbol
+# 6-word passphrase with extras
 curl genpwd.sh/passphrase+number+symbol+6
 
-# 20-letter random password
-curl genpwd.sh/random+20
-            </pre>
-        </div>
+# POST JSON
+curl -sX POST genpwd.sh/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"type":"passphrase","length":5,"use_digits":true,"use_symbols":false}'</pre>
+      </div>
     </div>
-    <footer>
-        <span style="color:#1a3a5d; font-weight:500;">Created by Andres Bolivar</span>
-        <span style="margin-left:18px;">
-            <a href="https://bsky.app/profile/andresbolivar.bsky.social" target="_blank" style="margin:0 8px; color:#4ea1ff; text-decoration:none; vertical-align:middle;">
-                <i class="fa-brands fa-bluesky" style="font-size:1.3em;"></i>
-            </a>
-            <a href="https://github.com/audrum" target="_blank" style="margin:0 8px; color:#1a3a5d; text-decoration:none; vertical-align:middle;">
-                <i class="fa-brands fa-github" style="font-size:1.3em;"></i>
-            </a>
-        </span>
-    </footer>
-    <script>
-        const typeRadios = document.getElementsByName('type');
-        const optionsGroup = document.getElementById('optionsGroup');
-        const lengthInput = document.getElementById('length');
-        const lengthDisplay = document.getElementById('lengthDisplay');
-        const form = document.getElementById('passwordForm');
-        const result = document.getElementById('result');
-        const passwordDisplay = document.getElementById('password');
-        const resultType = document.getElementById('resultType');
+  </main>
 
-        function updateForm() {
-            if (document.getElementById('type_passphrase').checked) {
-                lengthInput.value = 4;
-                lengthInput.min = 1;
-                lengthInput.max = 20;
-                lengthInput.step = 1;
-                lengthInput.type = 'number';
-                lengthDisplay.textContent = 'words';
-                optionsGroup.style.display = '';
-            } else {
-                lengthInput.value = 8;
-                lengthInput.min = 1;
-                lengthInput.max = 50;
-                lengthInput.step = 1;
-                lengthInput.type = 'number';
-                lengthDisplay.textContent = 'letters';
-                optionsGroup.style.display = '';
-            }
-        }
-        typeRadios.forEach(radio => {
-            radio.addEventListener('change', updateForm);
-        });
-        updateForm();
+  <footer>
+    <div class="footer-inner">
+      <span>Created by Andres Bolivar</span>
+      <a href="https://bsky.app/profile/andresbolivar.bsky.social" target="_blank" rel="noopener" title="Bluesky">
+        <i class="fa-brands fa-bluesky"></i>
+      </a>
+      <a href="https://github.com/audrum" target="_blank" rel="noopener" title="GitHub">
+        <i class="fa-brands fa-github"></i>
+      </a>
+    </div>
+  </footer>
 
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            let type = form.type.value;
-            let length = parseInt(form.length.value);
-            let url = '';
-            let opts = [];
-            if (form.use_digits.checked) opts.push('number');
-            if (form.use_symbols.checked) opts.push('symbol');
-            opts.push(length);
-            if (type === 'password') {
-                url = '/password+' + opts.join('+');
-            } else {
-                url = '/passphrase+' + opts.join('+');
-            }
-            try {
-                const response = await fetch(url, {headers: {Accept: 'application/json'}});
-                const data = await response.json();
-                passwordDisplay.textContent = data.password;
-                resultType.textContent = type.charAt(0).toUpperCase() + type.slice(1);
-                result.style.display = 'block';
-                // Show details
-                document.getElementById('complexity').textContent = data.complexity;
-                document.getElementById('entropy').textContent = data.entropy;
-                document.getElementById('cracktime').textContent = data.time_to_crack;
-                document.getElementById('details').style.display = 'block';
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error generating password. Please try again.');
-            }
-        });
-        function copyPassword() {
-            const password = passwordDisplay.textContent;
-            navigator.clipboard.writeText(password).then(function() {
-                const copyBtn = document.querySelector('.copy-btn');
-                const originalText = copyBtn.textContent;
-                copyBtn.textContent = 'Copied!';
-                setTimeout(() => {
-                    copyBtn.textContent = originalText;
-                }, 2000);
-            }).catch(function(err) {
-                console.error('Could not copy text: ', err);
-                alert('Failed to copy password to clipboard');
-            });
-        }
-        // Collapsible API usage
-        const coll = document.querySelector('.collapsible');
-        const content = document.querySelector('.content');
-        coll.addEventListener('click', function() {
-            this.classList.toggle('active');
-            if (content.style.display === 'block') {
-                content.style.display = 'none';
-            } else {
-                content.style.display = 'block';
-            }
-        });
-    </script>
+  <script>
+    /* ── Config ── */
+    const SLIDER_CONFIG = {
+      passphrase: { min: 2, max: 20, value: 4,  unit: ' words' },
+      password:   { min: 4, max: 64, value: 16, unit: ' chars' },
+    };
+
+    const STRENGTH_MAP = {
+      Weak:   { color: '#ef4444', width: '20%'  },
+      Fair:   { color: '#f59e0b', width: '50%'  },
+      Good:   { color: '#3b82f6', width: '75%'  },
+      Strong: { color: '#10b981', width: '100%' },
+    };
+
+    const COPY_ICON_TEXT  = '\u2398 Copy';
+    const COPIED_OK_TEXT  = '\u2713 Copied';
+
+    /* ── State ── */
+    let currentType = 'passphrase';
+
+    /* ── DOM refs ── */
+    const tabs         = document.querySelectorAll('.tab');
+    const tabSlider    = document.getElementById('tabSlider');
+    const tabsEl       = document.getElementById('tabs');
+    const slider       = document.getElementById('lengthSlider');
+    const lengthVal    = document.getElementById('lengthVal');
+    const lengthUnit   = document.getElementById('lengthUnit');
+    const useDigits    = document.getElementById('useDigits');
+    const useSymbols   = document.getElementById('useSymbols');
+    const genBtn       = document.getElementById('genBtn');
+    const result       = document.getElementById('result');
+    const resultType   = document.getElementById('resultType');
+    const pwDisplay    = document.getElementById('pwDisplay');
+    const scanLine     = document.getElementById('scanLine');
+    const strengthFill = document.getElementById('strengthFill');
+    const strengthLabel= document.getElementById('strengthLabel');
+    const entropyVal   = document.getElementById('entropyVal');
+    const crackVal     = document.getElementById('crackVal');
+    const copyBtn      = document.getElementById('copyBtn');
+    const apiToggle    = document.getElementById('apiToggle');
+    const apiBody      = document.getElementById('apiBody');
+
+    /* ── Tab slider positioning ── */
+    function updateTabSlider(type) {
+      const allTabs  = Array.from(tabs);
+      const activeEl = document.querySelector('.tab[data-type="' + type + '"]');
+      const idx      = allTabs.indexOf(activeEl);
+      const w        = (tabsEl.offsetWidth - 8) / allTabs.length;
+      tabSlider.style.width     = w + 'px';
+      tabSlider.style.transform = 'translateX(' + (idx * w) + 'px)';
+    }
+
+    /* ── Apply slider config per type ── */
+    function applySliderConfig(type) {
+      const cfg = SLIDER_CONFIG[type];
+      slider.min   = cfg.min;
+      slider.max   = cfg.max;
+      slider.value = cfg.value;
+      lengthVal.textContent  = cfg.value;
+      lengthUnit.textContent = cfg.unit;
+    }
+
+    /* ── Tab switch ── */
+    tabs.forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        const type = tab.dataset.type;
+        if (type === currentType) return;
+        currentType = type;
+        tabs.forEach(function(t) { t.classList.toggle('active', t === tab); });
+        updateTabSlider(type);
+        applySliderConfig(type);
+        resultType.textContent =
+          type.charAt(0).toUpperCase() + type.slice(1);
+        generate();
+      });
+    });
+
+    /* ── Slider input ── */
+    slider.addEventListener('input', function() {
+      lengthVal.textContent = slider.value;
+      generate();
+    });
+
+    /* ── Toggle input ── */
+    useDigits.addEventListener('change',  generate);
+    useSymbols.addEventListener('change', generate);
+
+    /* ── Manual generate ── */
+    genBtn.addEventListener('click', generate);
+
+    /* ── Generate via POST /generate ── */
+    function generate() {
+      var payload = JSON.stringify({
+        type:        currentType,
+        length:      parseInt(slider.value, 10),
+        use_digits:  useDigits.checked,
+        use_symbols: useSymbols.checked,
+      });
+
+      fetch('/generate', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    payload,
+      })
+      .then(function(res) { return res.json(); })
+      .then(displayResult)
+      .catch(function(err) { console.error('Generate error:', err); });
+    }
+
+    /* ── Display result ── */
+    function displayResult(data) {
+      result.style.display = 'block';
+
+      /* Password text — textContent only, no HTML */
+      pwDisplay.textContent = data.password;
+      resultType.textContent =
+        currentType.charAt(0).toUpperCase() + currentType.slice(1);
+
+      /* Scan-line animation */
+      scanLine.classList.remove('scanning');
+      /* Force reflow so the animation restarts */
+      void scanLine.offsetWidth;
+      scanLine.classList.add('scanning');
+
+      /* Strength bar */
+      var s = STRENGTH_MAP[data.complexity] || STRENGTH_MAP['Weak'];
+      strengthFill.style.width      = s.width;
+      strengthFill.style.background = s.color;
+      strengthLabel.textContent     = data.complexity;
+      strengthLabel.style.color     = s.color;
+
+      /* Stats */
+      entropyVal.textContent = data.entropy;
+      crackVal.textContent   = data.time_to_crack;
+    }
+
+    /* ── Copy ── */
+    copyBtn.addEventListener('click', function() {
+      var text = pwDisplay.textContent;
+      if (!text || text === '\u2014') return;
+      navigator.clipboard.writeText(text).then(function() {
+        copyBtn.textContent = COPIED_OK_TEXT;
+        copyBtn.classList.add('copied');
+        setTimeout(function() {
+          copyBtn.textContent = COPY_ICON_TEXT;
+          copyBtn.classList.remove('copied');
+        }, 2000);
+      }).catch(function(err) { console.error('Copy failed:', err); });
+    });
+
+    /* ── API toggle ── */
+    apiToggle.addEventListener('click', function() {
+      var open = apiBody.style.display === 'block';
+      apiBody.style.display = open ? 'none' : 'block';
+      apiToggle.classList.toggle('open', !open);
+    });
+
+    /* ── Init ── */
+    updateTabSlider(currentType);
+    applySliderConfig(currentType);
+    generate();
+  </script>
 </body>
-</html> 
+</html>
