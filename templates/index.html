@@ -517,10 +517,10 @@
     <div class="card">
 
       <!-- Tab switcher -->
-      <div class="tabs" id="tabs">
-        <button class="tab active" data-type="passphrase">Passphrase</button>
-        <button class="tab"        data-type="password">Password</button>
-        <div class="tab-slider" id="tabSlider"></div>
+      <div class="tabs" id="tabs" role="tablist">
+        <button class="tab active" data-type="passphrase" role="tab" aria-selected="true">Passphrase</button>
+        <button class="tab"        data-type="password"   role="tab" aria-selected="false">Password</button>
+        <div class="tab-slider" id="tabSlider" aria-hidden="true"></div>
       </div>
 
       <!-- Length control -->
@@ -634,6 +634,12 @@ curl -sX POST genpwd.sh/generate \
   </footer>
 
   <script>
+    /* ── Utilities ── */
+    function debounce(fn, delay) {
+      let timer;
+      return function() { clearTimeout(timer); timer = setTimeout(fn, delay); };
+    }
+
     /* ── Config ── */
     const SLIDER_CONFIG = {
       passphrase: { min: 2, max: 20, value: 4,  unit: ' words' },
@@ -701,7 +707,10 @@ curl -sX POST genpwd.sh/generate \
         const type = tab.dataset.type;
         if (type === currentType) return;
         currentType = type;
-        tabs.forEach(function(t) { t.classList.toggle('active', t === tab); });
+        tabs.forEach(function(t) {
+          t.classList.toggle('active', t === tab);
+          t.setAttribute('aria-selected', t === tab ? 'true' : 'false');
+        });
         updateTabSlider(type);
         applySliderConfig(type);
         resultType.textContent =
@@ -711,9 +720,10 @@ curl -sX POST genpwd.sh/generate \
     });
 
     /* ── Slider input ── */
+    const debouncedGenerate = debounce(generate, 300);
     slider.addEventListener('input', function() {
       lengthVal.textContent = slider.value;
-      generate();
+      debouncedGenerate();
     });
 
     /* ── Toggle input ── */
@@ -725,6 +735,8 @@ curl -sX POST genpwd.sh/generate \
 
     /* ── Generate via POST /generate ── */
     function generate() {
+      genBtn.disabled = true;
+
       var payload = JSON.stringify({
         type:        currentType,
         length:      parseInt(slider.value, 10),
@@ -737,9 +749,21 @@ curl -sX POST genpwd.sh/generate \
         headers: { 'Content-Type': 'application/json' },
         body:    payload,
       })
-      .then(function(res) { return res.json(); })
-      .then(displayResult)
-      .catch(function(err) { console.error('Generate error:', err); });
+      .then(function(res) {
+        if (!res.ok) throw new Error('Server error ' + res.status);
+        return res.json();
+      })
+      .then(function(data) {
+        displayResult(data);
+        genBtn.disabled = false;
+      })
+      .catch(function(err) {
+        console.error('Generate error:', err);
+        genBtn.disabled = false;
+        if (result.style.display !== 'none') {
+          pwDisplay.textContent = 'Error generating — try again';
+        }
+      });
     }
 
     /* ── Display result ── */
@@ -791,9 +815,11 @@ curl -sX POST genpwd.sh/generate \
     });
 
     /* ── Init ── */
-    updateTabSlider(currentType);
     applySliderConfig(currentType);
-    generate();
+    requestAnimationFrame(function() {
+      updateTabSlider(currentType);
+      generate();
+    });
   </script>
 </body>
 </html>
