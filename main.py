@@ -7,6 +7,7 @@ import math
 app = Flask(__name__)
 
 WORDLIST = Path(__file__).parent / "eff_large_wordlist.txt"
+SYMBOLS = "!@#$%^&*()_+-=[]{}|;:,.<>?"
 
 def load_eff_wordlist(file_path):
     """Load EFF wordlist and return a dict: number (str) -> word (str)."""
@@ -32,7 +33,7 @@ def generate_passphrase(word_dict, length, use_digits, use_symbols):
     if use_digits:
         password += str(random.randint(0, 9))
     if use_symbols:
-        password += random.choice("!@#$%^&*()_+-=[]{}|;:,.<>?")
+        password += random.choice(SYMBOLS)
     return password
 
 
@@ -71,7 +72,7 @@ def complexity_score(password):
         score += 1
     if any(c.isdigit() for c in password):
         score += 1
-    if any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password):
+    if any(c in SYMBOLS for c in password):
         score += 1
     if len(password) >= 12:
         score += 1
@@ -111,7 +112,7 @@ def password_response(password):
     charset_size = 52  # a-zA-Z
     if any(c.isdigit() for c in password):
         charset_size += 10
-    if any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password):
+    if any(c in SYMBOLS for c in password):
         charset_size += len("!@#$%^&*()_+-=[]{}|;:,.<>?")
     entropy = calculate_entropy(password, charset_size)
     score = complexity_score(password)
@@ -150,7 +151,7 @@ def password_route(extra):
     if use_digits:
         password += str(random.randint(0, 9))
     if use_symbols:
-        password += random.choice("!@#$%^&*()_+-=[]{}|;:,.<>?")
+        password += random.choice(SYMBOLS)
     resp = password_response(password)
     # If curl (Accept: text/plain), return plain text, else JSON
     from flask import request

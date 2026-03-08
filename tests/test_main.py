@@ -1,15 +1,18 @@
 import pytest
-import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from main import app, generate_passphrase, load_eff_wordlist, WORDLIST, SYMBOLS
 
 
 @pytest.fixture
-def client():
+def app_instance():
     app.config['TESTING'] = True
-    with app.test_client() as c:
-        yield c
+    yield app
+    app.config['TESTING'] = False
+
+
+@pytest.fixture
+def client(app_instance):
+    return app_instance.test_client()
 
 
 @pytest.fixture
@@ -57,6 +60,7 @@ def test_passphrase_digit_and_symbol_count(word_dict):
 # --- API route tests ---
 
 def test_password_route_json(client):
+    """JSON response includes all required fields."""
     r = client.get('/password', headers={'Accept': 'application/json'})
     assert r.status_code == 200
     data = r.get_json()
@@ -67,6 +71,7 @@ def test_password_route_json(client):
 
 
 def test_passphrase_route_json(client):
+    """JSON response for passphrase includes password field."""
     r = client.get('/passphrase', headers={'Accept': 'application/json'})
     assert r.status_code == 200
     data = r.get_json()
@@ -74,6 +79,7 @@ def test_passphrase_route_json(client):
 
 
 def test_password_route_curl(client):
+    """curl User-Agent returns plain text with entropy line."""
     r = client.get('/password', headers={'User-Agent': 'curl/7.88.0'})
     assert r.status_code == 200
     assert b'Entropy:' in r.data
