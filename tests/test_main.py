@@ -112,3 +112,33 @@ def test_random_route_with_symbol(client):
     r = client.get('/random+symbol', headers={'Accept': 'application/json'})
     data = r.get_json()
     assert any(c in SYMBOLS for c in data['password'])
+
+def test_generate_post_password_type(client):
+    r = client.post('/generate',
+        json={"type": "password", "length": 10, "use_digits": True},
+        headers={'Accept': 'application/json'})
+    assert r.status_code == 200
+    data = r.get_json()
+    assert 'password' in data
+    assert any(c.isdigit() for c in data['password'])
+
+def test_generate_post_missing_body(client):
+    r = client.post('/generate', data='not-json', content_type='text/plain')
+    assert r.status_code == 400
+
+def test_passphrase_length_clamped(client):
+    r = client.get('/passphrase+99', headers={'Accept': 'application/json'})
+    data = r.get_json()
+    # Count words by splitting on separators (hyphens or digits or symbols between words)
+    import re
+    words = re.split(r'[-\d!@#$%^&*()_+=\[\]{}|;:,.<>?]', data['password'])
+    words = [w for w in words if w]  # filter empty strings
+    assert len(words) <= 20
+
+def test_password_length_clamped(client):
+    r = client.get('/password+99', headers={'Accept': 'application/json'})
+    data = r.get_json()
+    # password length should be capped (letters only portion <= 64)
+    import re
+    letters_only = re.sub(r'[\d!@#$%^&*()_+=\[\]{}|;:,.<>?]', '', data['password'])
+    assert len(letters_only) <= 64

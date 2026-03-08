@@ -90,7 +90,7 @@ def generate_password(length: int = 8) -> str:
     return "".join(secrets.choice(letters) for _ in range(length))
 
 
-def parse_options(path: str, default_length: int) -> tuple[int, bool, bool]:
+def parse_options(path: str, default_length: int, max_length: int = 64) -> tuple[int, bool, bool]:
     """Parse +number, +symbol, +<int> tokens from a URL path segment."""
     use_digits = False
     use_symbols = False
@@ -102,7 +102,7 @@ def parse_options(path: str, default_length: int) -> tuple[int, bool, bool]:
             use_digits = True
         elif part.lower() == "symbol":
             use_symbols = True
-    length = max(1, length)
+    length = max(1, min(length, max_length))
     return length, use_digits, use_symbols
 
 
@@ -202,13 +202,14 @@ def index():
 
 @app.route("/generate", methods=["POST"])
 def generate():
-    data = request.get_json()
+    data = request.get_json(force=True, silent=True)
     if not data:
         return jsonify({"error": "Invalid or missing JSON body"}), 400
-    length = data.get("length", 4)
+    gen_type = data.get("type", "passphrase")
     use_digits = data.get("use_digits", False)
     use_symbols = data.get("use_symbols", False)
-    gen_type = data.get("type", "passphrase")
+    max_len = 20 if gen_type == "passphrase" else 64
+    length = min(max(1, data.get("length", 4)), max_len)
 
     if gen_type == "password":
         password, entropy = generate_password_with_options(length, use_digits, use_symbols)
@@ -223,7 +224,7 @@ def generate():
 @app.route("/password", defaults={"extra": ""})
 @app.route("/password<path:extra>")
 def password_route(extra):
-    length, use_digits, use_symbols = parse_options("/password" + extra, default_length=8)
+    length, use_digits, use_symbols = parse_options("/password" + extra, default_length=8, max_length=64)
     password, entropy = generate_password_with_options(length, use_digits, use_symbols)
     data = build_response(password, entropy)
     return plain_text_response(data) if is_cli_request() else jsonify(data)
@@ -232,7 +233,7 @@ def password_route(extra):
 @app.route("/passphrase", defaults={"extra": ""})
 @app.route("/passphrase<path:extra>")
 def passphrase_route(extra):
-    length, use_digits, use_symbols = parse_options("/passphrase" + extra, default_length=4)
+    length, use_digits, use_symbols = parse_options("/passphrase" + extra, default_length=4, max_length=20)
     word_dict = get_word_dict()
     password = generate_passphrase(word_dict, length, use_digits, use_symbols)
     entropy = passphrase_entropy(length, use_digits, use_symbols)
@@ -243,7 +244,7 @@ def passphrase_route(extra):
 @app.route("/random", defaults={"extra": ""})
 @app.route("/random<path:extra>")
 def random_letters_route(extra):
-    length, use_digits, use_symbols = parse_options("/random" + extra, default_length=12)
+    length, use_digits, use_symbols = parse_options("/random" + extra, default_length=12, max_length=64)
     password, entropy = generate_password_with_options(length, use_digits, use_symbols)
     data = build_response(password, entropy)
     return plain_text_response(data) if is_cli_request() else jsonify(data)
