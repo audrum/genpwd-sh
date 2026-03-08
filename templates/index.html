@@ -655,22 +655,30 @@ curl -sX POST genpwd.sh/generate \
       const canvas = document.getElementById('bgCanvas');
       const ctx    = canvas.getContext('2d');
       const COUNT  = 90;
-      const LINK   = 130;   // max distance to draw a line between particles
-      const PUSH   = 110;   // mouse repulsion radius
-      const FORCE  = 3.5;   // repulsion strength
+      const PUSH   = 110;
+      const FORCE  = 3.5;
+
+      // Per-strength config: [Weak, Fair, Good, Strong]
+      const S_COLOR    = [{r:239,g:68,b:68}, {r:245,g:158,b:11}, {r:59,g:130,b:246}, {r:0,g:229,b:255}];
+      const S_SPEEDCAP = [0.5,  1.0,  1.8,  3.2];   // max particle speed
+      const S_LINK     = [70,   100,  130,  170];    // connection draw distance
+      const S_OPACITY  = [0.35, 0.45, 0.55, 0.70];  // dot opacity
+
+      // Lerp targets — start at Strong (default before any generation)
+      let tIdx  = 3;
+      let cr    = 0,   cg = 229, cb = 255;   // current colour (lerped)
+      let cSpd  = 3.2;                        // current speed cap
+      let cLink = 170;                        // current link distance
+      let cOpac = 0.70;                       // current dot opacity
 
       let W, H, particles;
       const mouse = { x: -9999, y: -9999 };
 
-      function resize() {
-        W = canvas.width  = window.innerWidth;
-        H = canvas.height = window.innerHeight;
-      }
+      function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
 
       function mkParticle() {
         return {
-          x:  Math.random() * W,
-          y:  Math.random() * H,
+          x: Math.random() * W, y: Math.random() * H,
           vx: (Math.random() - 0.5) * 0.5,
           vy: (Math.random() - 0.5) * 0.5,
           r:  Math.random() * 1.2 + 0.4,
@@ -679,48 +687,54 @@ curl -sX POST genpwd.sh/generate \
 
       function init() { resize(); particles = Array.from({ length: COUNT }, mkParticle); }
 
+      function lerp(a, b, t) { return a + (b - a) * t; }
+
       function loop() {
+        // Smoothly interpolate toward target strength state
+        const tc = S_COLOR[tIdx];
+        cr    = lerp(cr,    tc.r,          0.025);
+        cg    = lerp(cg,    tc.g,          0.025);
+        cb    = lerp(cb,    tc.b,          0.025);
+        cSpd  = lerp(cSpd,  S_SPEEDCAP[tIdx], 0.025);
+        cLink = lerp(cLink, S_LINK[tIdx],  0.025);
+        cOpac = lerp(cOpac, S_OPACITY[tIdx], 0.025);
+
         ctx.clearRect(0, 0, W, H);
+
         for (let i = 0; i < COUNT; i++) {
           const p  = particles[i];
           const dx = p.x - mouse.x;
           const dy = p.y - mouse.y;
           const d  = Math.sqrt(dx * dx + dy * dy);
 
-          // Mouse repulsion
           if (d < PUSH && d > 0) {
             const f = (PUSH - d) / PUSH * FORCE;
             p.vx += dx / d * f * 0.06;
             p.vy += dy / d * f * 0.06;
           }
 
-          // Dampen & speed-cap
-          p.vx *= 0.98;
-          p.vy *= 0.98;
+          p.vx *= 0.98; p.vy *= 0.98;
           const spd = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-          if (spd > 2) { p.vx = p.vx / spd * 2; p.vy = p.vy / spd * 2; }
+          if (spd > cSpd) { p.vx = p.vx / spd * cSpd; p.vy = p.vy / spd * cSpd; }
 
-          // Move & wrap
           p.x = (p.x + p.vx + W) % W;
           p.y = (p.y + p.vy + H) % H;
 
-          // Draw dot
+          // Dot
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(0,229,255,0.55)';
+          ctx.fillStyle = `rgba(${cr|0},${cg|0},${cb|0},${cOpac})`;
           ctx.fill();
 
-          // Draw connections
+          // Connections
           for (let j = i + 1; j < COUNT; j++) {
             const q  = particles[j];
-            const ex = p.x - q.x;
-            const ey = p.y - q.y;
+            const ex = p.x - q.x, ey = p.y - q.y;
             const ed = Math.sqrt(ex * ex + ey * ey);
-            if (ed < LINK) {
+            if (ed < cLink) {
               ctx.beginPath();
-              ctx.moveTo(p.x, p.y);
-              ctx.lineTo(q.x, q.y);
-              ctx.strokeStyle = `rgba(0,229,255,${(1 - ed / LINK) * 0.22})`;
+              ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y);
+              ctx.strokeStyle = `rgba(${cr|0},${cg|0},${cb|0},${((1 - ed / cLink) * 0.22).toFixed(3)})`;
               ctx.lineWidth = 0.6;
               ctx.stroke();
             }
@@ -729,12 +743,14 @@ curl -sX POST genpwd.sh/generate \
         requestAnimationFrame(loop);
       }
 
+      // Called from displayResult with 0=Weak 1=Fair 2=Good 3=Strong
+      window.setParticleStrength = function(idx) { tIdx = Math.max(0, Math.min(3, idx)); };
+
       window.addEventListener('resize', init);
       window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
       window.addEventListener('mouseleave', () => { mouse.x = -9999; mouse.y = -9999; });
       window.addEventListener('touchmove', e => {
-        const t = e.touches[0];
-        mouse.x = t.clientX; mouse.y = t.clientY;
+        const t = e.touches[0]; mouse.x = t.clientX; mouse.y = t.clientY;
       }, { passive: true });
       window.addEventListener('touchend', () => { mouse.x = -9999; mouse.y = -9999; });
 
@@ -895,6 +911,10 @@ curl -sX POST genpwd.sh/generate \
       strengthFill.style.background = s.color;
       strengthLabel.textContent     = data.complexity;
       strengthLabel.style.color     = s.color;
+
+      /* Sync particle background to strength level */
+      var strengthIdx = { Weak: 0, Fair: 1, Good: 2, Strong: 3 };
+      window.setParticleStrength(strengthIdx[data.complexity] ?? 0);
 
       /* Stats */
       entropyVal.textContent = data.entropy;
