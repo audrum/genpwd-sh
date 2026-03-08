@@ -660,21 +660,21 @@ curl -sX POST genpwd.sh/generate \
       const canvas = document.getElementById('bgCanvas');
       const ctx    = canvas.getContext('2d');
       const COUNT  = 90;
-      const PUSH   = 110;
-      const FORCE  = 3.5;
+      const PUSH   = 120;
+      const FORCE  = 4.0;
 
-      // Per-strength config: [Weak, Fair, Good, Strong]
-      const S_COLOR    = [{r:239,g:68,b:68}, {r:245,g:158,b:11}, {r:59,g:130,b:246}, {r:0,g:229,b:255}];
-      const S_SPEEDCAP = [0.5,  1.0,  1.8,  3.2];   // max particle speed
-      const S_LINK     = [70,   100,  130,  170];    // connection draw distance
-      const S_OPACITY  = [0.35, 0.45, 0.55, 0.70];  // dot opacity
+      // Per-strength: [Weak, Fair, Good, Strong]
+      const S = [
+        { r:220, g:38,  b:38,  spd:0.35, link:45,  opac:0.30, dampen:0.970 }, // Weak   – red,   barely moving
+        { r:245, g:158, b:11,  spd:0.90, link:90,  opac:0.45, dampen:0.978 }, // Fair   – amber, slow
+        { r:59,  g:130, b:246, spd:1.80, link:135, opac:0.58, dampen:0.984 }, // Good   – blue,  active
+        { r:0,   g:229, b:255, spd:4.00, link:180, opac:0.78, dampen:0.990 }, // Strong – cyan,  energetic
+      ];
 
-      // Lerp targets — start at Strong (default before any generation)
-      let tIdx  = 3;
-      let cr    = 0,   cg = 229, cb = 255;   // current colour (lerped)
-      let cSpd  = 3.2;                        // current speed cap
-      let cLink = 170;                        // current link distance
-      let cOpac = 0.70;                       // current dot opacity
+      // Start neutral (between weak and fair) so first generation is always visible
+      let tIdx = -1;  // -1 = no strength set yet
+      let cr = 30, cg = 30, cb = 60;
+      let cSpd = 0.5, cLink = 60, cOpac = 0.25, cDamp = 0.975;
 
       let W, H, particles;
       const mouse = { x: -9999, y: -9999 };
@@ -684,9 +684,9 @@ curl -sX POST genpwd.sh/generate \
       function mkParticle() {
         return {
           x: Math.random() * W, y: Math.random() * H,
-          vx: (Math.random() - 0.5) * 0.5,
-          vy: (Math.random() - 0.5) * 0.5,
-          r:  Math.random() * 1.2 + 0.4,
+          vx: (Math.random() - 0.5) * 0.4,
+          vy: (Math.random() - 0.5) * 0.4,
+          r:  Math.random() * 1.3 + 0.4,
         };
       }
 
@@ -695,14 +695,26 @@ curl -sX POST genpwd.sh/generate \
       function lerp(a, b, t) { return a + (b - a) * t; }
 
       function loop() {
-        // Smoothly interpolate toward target strength state
-        const tc = S_COLOR[tIdx];
-        cr    = lerp(cr,    tc.r,          0.025);
-        cg    = lerp(cg,    tc.g,          0.025);
-        cb    = lerp(cb,    tc.b,          0.025);
-        cSpd  = lerp(cSpd,  S_SPEEDCAP[tIdx], 0.025);
-        cLink = lerp(cLink, S_LINK[tIdx],  0.025);
-        cOpac = lerp(cOpac, S_OPACITY[tIdx], 0.025);
+        if (tIdx >= 0) {
+          const t = S[tIdx];
+          // Fast lerp (0.07) — clearly visible within ~0.5 seconds
+          cr    = lerp(cr,    t.r,      0.07);
+          cg    = lerp(cg,    t.g,      0.07);
+          cb    = lerp(cb,    t.b,      0.07);
+          cSpd  = lerp(cSpd,  t.spd,    0.07);
+          cLink = lerp(cLink, t.link,   0.07);
+          cOpac = lerp(cOpac, t.opac,   0.07);
+          cDamp = lerp(cDamp, t.dampen, 0.07);
+
+          // Boost particle velocities when transitioning to stronger state
+          // so they speed up immediately rather than waiting for new movement
+          if (tIdx >= 2) {
+            for (const p of particles) {
+              p.vx += (Math.random() - 0.5) * 0.15;
+              p.vy += (Math.random() - 0.5) * 0.15;
+            }
+          }
+        }
 
         ctx.clearRect(0, 0, W, H);
 
@@ -718,7 +730,7 @@ curl -sX POST genpwd.sh/generate \
             p.vy += dy / d * f * 0.06;
           }
 
-          p.vx *= 0.98; p.vy *= 0.98;
+          p.vx *= cDamp; p.vy *= cDamp;
           const spd = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
           if (spd > cSpd) { p.vx = p.vx / spd * cSpd; p.vy = p.vy / spd * cSpd; }
 
@@ -728,28 +740,33 @@ curl -sX POST genpwd.sh/generate \
           // Dot
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${cr|0},${cg|0},${cb|0},${cOpac})`;
+          ctx.fillStyle = `rgba(${cr|0},${cg|0},${cb|0},${cOpac.toFixed(2)})`;
           ctx.fill();
 
           // Connections
-          for (let j = i + 1; j < COUNT; j++) {
-            const q  = particles[j];
-            const ex = p.x - q.x, ey = p.y - q.y;
-            const ed = Math.sqrt(ex * ex + ey * ey);
-            if (ed < cLink) {
-              ctx.beginPath();
-              ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y);
-              ctx.strokeStyle = `rgba(${cr|0},${cg|0},${cb|0},${((1 - ed / cLink) * 0.22).toFixed(3)})`;
-              ctx.lineWidth = 0.6;
-              ctx.stroke();
+          if (cLink > 10) {
+            for (let j = i + 1; j < COUNT; j++) {
+              const q  = particles[j];
+              const ex = p.x - q.x, ey = p.y - q.y;
+              const ed = Math.sqrt(ex * ex + ey * ey);
+              if (ed < cLink) {
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y);
+                const a = ((1 - ed / cLink) * 0.28 * cOpac).toFixed(3);
+                ctx.strokeStyle = `rgba(${cr|0},${cg|0},${cb|0},${a})`;
+                ctx.lineWidth = 0.7;
+                ctx.stroke();
+              }
             }
           }
         }
         requestAnimationFrame(loop);
       }
 
-      // Called from displayResult with 0=Weak 1=Fair 2=Good 3=Strong
-      window.setParticleStrength = function(idx) { tIdx = Math.max(0, Math.min(3, idx)); };
+      // Exposed globally — called from displayResult
+      window.setParticleStrength = function(idx) {
+        tIdx = Math.max(0, Math.min(3, idx));
+      };
 
       window.addEventListener('resize', init);
       window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
