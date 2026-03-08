@@ -90,11 +90,23 @@ def parse_options(path: str, default_length: int) -> tuple[int, bool, bool]:
             use_digits = True
         elif part.lower() == "symbol":
             use_symbols = True
+    length = max(1, length)
     return length, use_digits, use_symbols
 
 
 def calculate_entropy(password: str, charset_size: int) -> float:
     return round(len(password) * math.log2(charset_size), 2)
+
+
+def generate_password_with_options(length: int, use_digits: bool, use_symbols: bool) -> tuple[str, float]:
+    """Generate a letter password with optional digit/symbol appended, and compute its entropy."""
+    password = generate_password(length)
+    if use_digits:
+        password += str(random.randint(0, 9))
+    if use_symbols:
+        password += random.choice(SYMBOLS)
+    charset_size = 52 + (10 if use_digits else 0) + (len(SYMBOLS) if use_symbols else 0)
+    return password, calculate_entropy(password, charset_size)
 
 
 def passphrase_entropy(word_count: int, use_digits: bool, use_symbols: bool) -> float:
@@ -179,19 +191,15 @@ def index():
 @app.route("/generate", methods=["POST"])
 def generate():
     data = request.get_json()
+    if not data:
+        return jsonify({"error": "Invalid or missing JSON body"}), 400
     length = data.get("length", 4)
     use_digits = data.get("use_digits", False)
     use_symbols = data.get("use_symbols", False)
     gen_type = data.get("type", "passphrase")
 
     if gen_type == "password":
-        password = generate_password(length)
-        if use_digits:
-            password += str(random.randint(0, 9))
-        if use_symbols:
-            password += random.choice(SYMBOLS)
-        charset_size = 52 + (10 if use_digits else 0) + (len(SYMBOLS) if use_symbols else 0)
-        entropy = calculate_entropy(password, charset_size)
+        password, entropy = generate_password_with_options(length, use_digits, use_symbols)
     else:
         word_dict = get_word_dict()
         password = generate_passphrase(word_dict, length, use_digits, use_symbols)
@@ -204,13 +212,7 @@ def generate():
 @app.route("/password<path:extra>")
 def password_route(extra):
     length, use_digits, use_symbols = parse_options("/password" + extra, default_length=8)
-    password = generate_password(length)
-    if use_digits:
-        password += str(random.randint(0, 9))
-    if use_symbols:
-        password += random.choice(SYMBOLS)
-    charset_size = 52 + (10 if use_digits else 0) + (len(SYMBOLS) if use_symbols else 0)
-    entropy = calculate_entropy(password, charset_size)
+    password, entropy = generate_password_with_options(length, use_digits, use_symbols)
     data = build_response(password, entropy)
     return plain_text_response(data) if is_cli_request() else jsonify(data)
 
