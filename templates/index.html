@@ -1110,7 +1110,7 @@ curl -sX POST genpwd.sh/generate \
     shareBtn.addEventListener('click', function() {
       var type   = currentType;
       var length = parseInt(slider.value, 10);
-      var url    = window.location.host + '/' + type + '+' + length;
+      var url    = 'https://' + window.location.host + '/' + type + '+' + length;
       if (useDigits.checked)  url += '+number';
       if (useSymbols.checked) url += '+symbol';
       navigator.clipboard.writeText(url).then(function() {
