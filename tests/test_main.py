@@ -167,10 +167,10 @@ def test_generate_post_missing_body(client):
 def test_passphrase_length_clamped(client):
     r = client.get('/passphrase+99', headers={'Accept': 'application/json'})
     data = r.get_json()
-    # Count words by splitting on separators (hyphens or digits or symbols between words)
     import re
-    words = re.split(r'[-\d!@#$%^&*()_+=\[\]{}|;:,.<>?]', data['password'])
-    words = [w for w in words if w]  # filter empty strings
+    split_pattern = r'[\d' + re.escape(SYMBOLS) + r']'
+    words = re.split(split_pattern, data['password'])
+    words = [w for w in words if w]
     assert len(words) <= 20
 
 def test_password_length_clamped(client):
