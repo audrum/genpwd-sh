@@ -37,17 +37,26 @@ def test_passphrase_no_extras(word_dict):
     assert all(w[0].isupper() for w in words)
 
 
-def test_passphrase_with_digit_sprinkled(word_dict):
-    """Digit appears somewhere inside the passphrase, not just at the end."""
-    results = [generate_passphrase(word_dict, 6, True, False) for _ in range(20)]
-    # At least once the digit should NOT be the very last character
-    assert any(not r[-1].isdigit() for r in results), "Digit always at end — not sprinkled"
+def test_passphrase_digit_at_end(word_dict):
+    """Digit always appears at the end of the passphrase (last char)."""
+    for _ in range(10):
+        pwd = generate_passphrase(word_dict, 4, True, False)
+        assert pwd[-1].isdigit(), f"Expected digit at end, got: {pwd}"
 
 
-def test_passphrase_with_symbol_sprinkled(word_dict):
-    """Symbol appears somewhere inside the passphrase, not just at the end."""
-    results = [generate_passphrase(word_dict, 6, False, True) for _ in range(20)]
-    assert any(r[-1] not in SYMBOLS for r in results), "Symbol always at end — not sprinkled"
+def test_passphrase_symbol_at_very_end(word_dict):
+    """Symbol always appears at the very end of the passphrase."""
+    for _ in range(10):
+        pwd = generate_passphrase(word_dict, 4, False, True)
+        assert pwd[-1] in SYMBOLS, f"Expected symbol at very end, got: {pwd}"
+
+
+def test_passphrase_digit_before_symbol(word_dict):
+    """When both requested, digit appears immediately before the symbol at the end."""
+    for _ in range(10):
+        pwd = generate_passphrase(word_dict, 4, True, True)
+        assert pwd[-1] in SYMBOLS, f"Expected symbol at very end, got: {pwd}"
+        assert pwd[-2].isdigit(), f"Expected digit before symbol, got: {pwd}"
 
 
 def test_passphrase_single_word_with_extras(word_dict):

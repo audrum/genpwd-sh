@@ -43,8 +43,6 @@ def get_word_dict() -> dict[str, str]:
 
 
 def generate_passphrase(word_dict: dict, length: int, use_digits: bool, use_symbols: bool) -> str:
-    """Generate passphrase from EFF wordlist. Digits/symbols are sprinkled as
-    separators between random word-pairs instead of appended at the end."""
     words = []
     for _ in range(length):
         while True:
@@ -53,47 +51,11 @@ def generate_passphrase(word_dict: dict, length: int, use_digits: bool, use_symb
                 words.append(word_dict[number].capitalize())
                 break
 
-    if length == 1:
-        # No separators to sprinkle into; fall back to appending
-        result = words[0]
-        if use_digits:
-            result += str(secrets.randbelow(10))
-        if use_symbols:
-            result += secrets.choice(SYMBOLS)
-        return result
-
-    # Build separator slots: (length - 1) hyphens
-    separators = ["-"] * (length - 1)
-
-    # Collect extras to sprinkle
-    extras: list[str] = []
+    result = "-".join(words)
     if use_digits:
-        extras.append(str(secrets.randbelow(10)))
+        result += "-" + str(secrets.randbelow(10))
     if use_symbols:
-        extras.append(secrets.choice(SYMBOLS))
-
-    # Replace randomly chosen separator slots with extras (sampling without replacement)
-    if extras:
-        n_sprinkled = min(len(extras), len(separators))
-        pool = list(range(len(separators)))
-        positions = []
-        for _ in range(n_sprinkled):
-            idx = secrets.randbelow(len(pool))
-            positions.append(pool[idx])
-            pool[idx] = pool[-1]
-            pool.pop()
-        for i, pos in enumerate(positions):
-            separators[pos] = extras[i]
-        overflow = extras[n_sprinkled:]  # extras that couldn't fit into separator slots
-    else:
-        overflow = []
-
-    # Interleave words and separators, then append any overflow extras
-    result = words[0]
-    for word, sep in zip(words[1:], separators):
-        result += sep + word
-    for extra in overflow:
-        result += extra
+        result += secrets.choice(SYMBOLS)
     return result
 
 
