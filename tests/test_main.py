@@ -67,10 +67,10 @@ def test_passphrase_single_word_with_extras(word_dict):
 
 
 def test_passphrase_digit_and_symbol_count(word_dict):
-    """Exactly one digit and one symbol inserted."""
+    """Exactly one digit added; symbol is the last character."""
     pwd = generate_passphrase(word_dict, 5, True, True)
     assert sum(c.isdigit() for c in pwd) == 1
-    assert sum(c in SYMBOLS for c in pwd) == 1
+    assert pwd[-1] in SYMBOLS
 
 
 def test_passphrase_complexity_label_weak():

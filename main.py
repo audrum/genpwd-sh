@@ -19,7 +19,7 @@ limiter = Limiter(
 RATE_LIMIT = "60 per minute"
 
 WORDLIST = Path(__file__).parent / "eff_large_wordlist.txt"
-SYMBOLS = "!@#$%^&*()_+=[]{}|;:,.<>?"
+SYMBOLS = "!@#$%^&*()_+=[]{}|;:,.<>?-"
 
 # Cache wordlist at startup — not on every request
 _WORD_DICT: dict[str, str] = {}
