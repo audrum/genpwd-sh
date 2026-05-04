@@ -1,6 +1,6 @@
 import pytest
 
-from main import app, generate_passphrase, load_eff_wordlist, WORDLIST, SYMBOLS, limiter
+from main import app, generate_passphrase, load_eff_wordlist, WORDLIST, SYMBOLS, limiter, passphrase_complexity_label
 
 
 @pytest.fixture
@@ -71,6 +71,28 @@ def test_passphrase_digit_and_symbol_count(word_dict):
     pwd = generate_passphrase(word_dict, 5, True, True)
     assert sum(c.isdigit() for c in pwd) == 1
     assert sum(c in SYMBOLS for c in pwd) == 1
+
+
+def test_passphrase_complexity_label_weak():
+    assert passphrase_complexity_label(25.0) == "Weak"
+    assert passphrase_complexity_label(39.9) == "Weak"
+
+
+def test_passphrase_complexity_label_fair():
+    assert passphrase_complexity_label(40.0) == "Fair"
+    assert passphrase_complexity_label(51.7) == "Fair"  # ~4-word passphrase
+    assert passphrase_complexity_label(59.9) == "Fair"
+
+
+def test_passphrase_complexity_label_good():
+    assert passphrase_complexity_label(60.0) == "Good"
+    assert passphrase_complexity_label(64.6) == "Good"  # ~5-word passphrase
+    assert passphrase_complexity_label(79.9) == "Good"
+
+
+def test_passphrase_complexity_label_strong():
+    assert passphrase_complexity_label(80.0) == "Strong"
+    assert passphrase_complexity_label(103.4) == "Strong"  # ~8-word passphrase
 
 
 # --- API route tests ---

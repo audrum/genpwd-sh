@@ -121,6 +121,16 @@ def score_label(score: int) -> str:
     return ["Weak", "Fair", "Good", "Strong"][max(0, score - 1)]
 
 
+def passphrase_complexity_label(entropy: float) -> str:
+    if entropy >= 80:
+        return "Strong"
+    if entropy >= 60:
+        return "Good"
+    if entropy >= 40:
+        return "Fair"
+    return "Weak"
+
+
 def time_to_crack_seconds(entropy: float, guesses_per_second: float = 1e10) -> float:
     return (0.5 * 2 ** entropy) / guesses_per_second
 
@@ -142,12 +152,12 @@ def format_time(seconds: float) -> str:
     return ", ".join(result) if result else "< 1 second"
 
 
-def build_response(password: str, entropy: float) -> dict:
-    score = complexity_score(password)
+def build_response(password: str, entropy: float, passphrase: bool = False) -> dict:
+    label = passphrase_complexity_label(entropy) if passphrase else score_label(complexity_score(password))
     return {
         "password": password,
         "entropy": entropy,
-        "complexity": score_label(score),
+        "complexity": label,
         "time_to_crack": format_time(time_to_crack_seconds(entropy)),
     }
 
@@ -188,12 +198,12 @@ def generate():
 
     if gen_type == "password":
         password, entropy = generate_password_with_options(length, use_digits, use_symbols)
-    else:
-        word_dict = get_word_dict()
-        password = generate_passphrase(word_dict, length, use_digits, use_symbols)
-        entropy = passphrase_entropy(length, use_digits, use_symbols)
+        return jsonify(build_response(password, entropy))
 
-    return jsonify(build_response(password, entropy))
+    word_dict = get_word_dict()
+    password = generate_passphrase(word_dict, length, use_digits, use_symbols)
+    entropy = passphrase_entropy(length, use_digits, use_symbols)
+    return jsonify(build_response(password, entropy, passphrase=True))
 
 
 @app.route("/password", defaults={"extra": ""})
@@ -214,7 +224,7 @@ def passphrase_route(extra):
     word_dict = get_word_dict()
     password = generate_passphrase(word_dict, length, use_digits, use_symbols)
     entropy = passphrase_entropy(length, use_digits, use_symbols)
-    data = build_response(password, entropy)
+    data = build_response(password, entropy, passphrase=True)
     return plain_text_response(data) if is_cli_request() else jsonify(data)
 
 
