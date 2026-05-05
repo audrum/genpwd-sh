@@ -176,9 +176,8 @@ def test_passphrase_length_clamped(client):
 def test_password_length_clamped(client):
     r = client.get('/password+99', headers={'Accept': 'application/json'})
     data = r.get_json()
-    # password length should be capped (letters only portion <= 64)
     import re
-    letters_only = re.sub(r'[\d!@#$%^&*()_+=\[\]{}|;:,.<>?]', '', data['password'])
+    letters_only = re.sub(r'[\d' + re.escape(SYMBOLS) + r']', '', data['password'])
     assert len(letters_only) <= 64
 
 
