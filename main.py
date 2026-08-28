@@ -1,3 +1,4 @@
+import os
 import secrets
 import math
 from pathlib import Path
@@ -43,13 +44,8 @@ def get_word_dict() -> dict[str, str]:
 
 
 def generate_passphrase(word_dict: dict, length: int, use_digits: bool, use_symbols: bool) -> str:
-    words = []
-    for _ in range(length):
-        while True:
-            number = str(secrets.randbelow(66666 - 11111 + 1) + 11111)
-            if number in word_dict:
-                words.append(word_dict[number].capitalize())
-                break
+    wordlist = list(word_dict.values())
+    words = [secrets.choice(wordlist).capitalize() for _ in range(length)]
 
     result = "-".join(words)
     if use_digits:
@@ -314,4 +310,7 @@ def health_route():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=9876, host="0.0.0.0")
+    # Local dev only. In production the app is served by gunicorn (see Dockerfile).
+    # Set FLASK_DEBUG=1 to enable the debugger locally.
+    debug = os.environ.get("FLASK_DEBUG") == "1"
+    app.run(debug=debug, port=9876, host="127.0.0.1")

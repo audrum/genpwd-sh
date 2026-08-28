@@ -1,12 +1,14 @@
 [project]
-name = "pwd-sh"
+name = "genpwd-sh"
 version = "0.1.0"
-description = "Add your description here"
+description = "Password and passphrase generator with a web UI and a curl-friendly API"
 readme = "README.md"
 requires-python = ">=3.13"
+license = { text = "MIT" }
 dependencies = [
     "flask>=3.0.0",
     "flask-limiter>=4.1.1",
+    "gunicorn>=23.0.0",
 ]
 
 [dependency-groups]

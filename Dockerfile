@@ -11,7 +11,7 @@ RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 WORKDIR /app
 
 # Copy only the files needed for install first (for better layer caching)
-COPY pyproject.toml /app/
+COPY pyproject.toml README.md /app/
 COPY eff_large_wordlist.txt /app/
 
 # Install dependencies with uv (system install for Docker best practice)
@@ -19,26 +19,21 @@ RUN uv pip install --system .
 
 # Now copy the rest of the app (code, templates, static, images)
 COPY main.py /app/
-COPY README.md /app/
 COPY templates/ /app/templates/
 COPY images/ /app/images/
 
 # Set permissions for the app directory
 RUN chown -R appuser:appgroup /app
 
-# Expose Flask port
+# Expose the service port
 EXPOSE 9876
-
-# Set environment variables for Flask
-ENV FLASK_APP=main.py
-ENV FLASK_RUN_HOST=0.0.0.0
 
 # Switch to non-root user
 USER appuser
 
-# Healthcheck for the container
+# Healthcheck for the container (no curl in the slim image, so use Python)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:9876/ || exit 1
+  CMD ["python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:9876/health', timeout=3).status == 200 else 1)"]
 
-# Run the app
-CMD ["python", "main.py"] 
+# Serve with gunicorn (never the Flask dev server in production)
+CMD ["gunicorn", "--bind", "0.0.0.0:9876", "--workers", "2", "--access-logfile", "-", "main:app"]
