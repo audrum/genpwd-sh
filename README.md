@@ -93,7 +93,7 @@ Estimated Time to crack: 2 years, 45 days, 3 hours
 
 ```sh
 uv sync
-uv run flask --app main run
+uv run flask --app main run          # add --debug for the debugger
 ```
 
 ### Running tests
@@ -104,5 +104,19 @@ uv run pytest
 
 ---
 
+## Deployment
+
+The container serves the app with gunicorn (never the Flask dev server):
+
+```sh
+docker build -t genpwd-sh .
+docker run -p 9876:9876 genpwd-sh
+```
+
+`fly deploy` uses the same `Dockerfile`.
+
+---
+
 ## License
-MIT
+
+[MIT](LICENSE)

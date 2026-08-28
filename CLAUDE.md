@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-GenPWD.sh is a Flask-based password/passphrase generator with both a web UI and a curl-friendly API. The app runs on port 9876, deployed on Fly.io.
+GenPWD.sh is a Flask-based password/passphrase generator with both a web UI and a curl-friendly API. The app runs on port 9876, served by gunicorn, deployed on Fly.io.
 
 ## Commands
 
@@ -12,8 +12,11 @@ GenPWD.sh is a Flask-based password/passphrase generator with both a web UI and 
 # Install dependencies (uses uv)
 uv pip install .
 
-# Run locally (debug mode, port 9876)
+# Run locally on 127.0.0.1:9876 (set FLASK_DEBUG=1 for the debugger)
 python main.py
+
+# Run locally the way production does (gunicorn)
+gunicorn --bind 127.0.0.1:9876 main:app
 
 # Build Docker image
 docker build -t genpwd-sh .
